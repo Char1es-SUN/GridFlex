@@ -215,10 +215,10 @@ export default function GridFlexibilityMarket() {
           </div>
 
           {/* Right Side - System Events - Right Half */}
-          <div className="bg-white rounded-lg shadow-lg p-6 border-l-4 border-purple-500 h-full">
+          <div className="bg-white rounded-lg shadow-lg p-6 border-l-4 border-purple-500">
             <h2 className="text-xl font-semibold mb-4 text-purple-700">System Events</h2>
             
-            <div className="space-y-4 max-h-96 overflow-y-auto">
+            <div className="space-y-4">
               {!hasEvents ? (
                 <div className="p-4 bg-gray-50 rounded-lg">
                   <p className="text-sm text-gray-600 text-center">No events yet. Start the auction workflow to see events.</p>

@@ -7,6 +7,7 @@ import { AuctionReset } from '../types/grid-flexibility';
 export class GridFlexibilityController {
   private service: GridFlexibilityService;
   private model: GridFlexibilityModel;
+  private isSubscribed: boolean = false;
 
   constructor(service: GridFlexibilityService, model: GridFlexibilityModel) {
     this.service = service;
@@ -17,10 +18,38 @@ export class GridFlexibilityController {
   // ========== Event Subscription ==========
 
   private setupEventSubscription(): void {
-    this.service.subscribeToEvents((event) => {
-      console.log('Event received in controller:', event);
+    if (this.isSubscribed) {
+      console.log('Already subscribed to events, skipping duplicate subscription');
+      return;
+    }
+
+    console.log('Setting up event subscription');
+    
+    // Set up direct event published callback for UI display
+    this.service.setEventPublishedCallback((event) => {
+      console.log('Event published, adding to UI:', event);
       this.model.dispatch({ type: 'ADD_EVENT', payload: event });
     });
+    
+    // Subscribe to events for business logic (if needed)
+    this.service.subscribeToEvents((event) => {
+      console.log('Event received in controller for business logic:', event);
+      // Only handle business logic here, not UI updates
+    });
+    
+    this.isSubscribed = true;
+
+    // Create test event only once after hydration
+    if (typeof window !== 'undefined') {
+      const testEvent = {
+        eventId: `evt_${Date.now()}_test`,
+        timestamp: new Date().toISOString(),
+        eventType: 'auction.reset' as const,
+        version: '1.0.0',
+        payload: { reason: 'System initialized' }
+      };
+      this.service.publishEvent(testEvent);
+    }
   }
 
   // ========== Business Logic Methods ==========

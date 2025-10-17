@@ -92,10 +92,13 @@ export class GridFlexibilityModel {
         this.state = { ...this.state, notification: action.payload };
         break;
       case 'ADD_EVENT':
+        console.log('Adding event to model:', action.payload.eventType, 'ID:', action.payload.eventId);
+        console.log('Current events count:', this.state.events.length);
         this.state = { 
           ...this.state, 
           events: [action.payload, ...this.state.events] 
         };
+        console.log('New events count:', this.state.events.length);
         break;
       case 'RESET_AUCTION':
         this.state = {

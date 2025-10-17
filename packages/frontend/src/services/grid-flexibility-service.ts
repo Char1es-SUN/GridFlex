@@ -73,16 +73,23 @@ export const createEvent = <T extends GridFlexibilityEvent>(
 export class MockGridFlexibilityService implements GridFlexibilityService {
   private events: GridFlexibilityEvent[] = [];
   private subscribers: ((event: GridFlexibilityEvent) => void)[] = [];
+  private onEventPublished?: (event: GridFlexibilityEvent) => void;
 
   async publishEvent(event: GridFlexibilityEvent): Promise<EventResponse> {
-    console.log('publishEvent called with event:', event.eventType);
+    console.log('publishEvent called with event:', event.eventType, 'ID:', event.eventId);
     console.log('Number of subscribers:', this.subscribers.length);
     
     this.events.push(event);
-    // Notify all subscribers
+    
+    // Notify the UI directly about the published event (for display)
+    if (this.onEventPublished) {
+      this.onEventPublished(event);
+    }
+    
+    // Notify all subscribers (for business logic)
     this.subscribers.forEach((callback, index) => {
       try {
-        console.log(`Calling subscriber ${index}`);
+        console.log(`Calling subscriber ${index} for event ${event.eventId}`);
         callback(event);
       } catch (error) {
         console.error('Error in event subscriber:', error);
@@ -285,5 +292,9 @@ export class MockGridFlexibilityService implements GridFlexibilityService {
         console.log('Subscriber removed, total subscribers now:', this.subscribers.length);
       }
     };
+  }
+
+  setEventPublishedCallback(callback: (event: GridFlexibilityEvent) => void): void {
+    this.onEventPublished = callback;
   }
 }

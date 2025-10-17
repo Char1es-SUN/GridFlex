@@ -19,20 +19,7 @@ export function useGridFlexibility(
     return unsubscribe;
   }, [model]);
 
-  // Ensure test event is only created after hydration
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      // This will run only on the client after hydration
-      const testEvent = {
-        eventId: `evt_${Date.now()}_test`,
-        timestamp: new Date().toISOString(),
-        eventType: 'auction.reset' as const,
-        version: '1.0.0',
-        payload: { reason: 'System initialized' }
-      };
-      service.publishEvent(testEvent);
-    }
-  }, [service]);
+  // No need to create test event here - it will be created by the controller
 
   return {
     state,
