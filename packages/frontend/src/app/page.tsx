@@ -24,6 +24,7 @@ interface AuctionResult {
   acceptedPower: number;
   remainingPower: number;
   remainingCost: number;
+  participantPayout: number;
   bidWon: boolean;
 }
 
@@ -67,13 +68,15 @@ export default function GridFlexibilityMarket() {
       // Mock auction resolution logic
       const acceptedPower = Math.min(bid.power, auction.power);
       const remainingPower = auction.power - acceptedPower;
-      const remainingCost = auction.cost - (acceptedPower * bid.price);
+      // Calculate remaining cost proportionally based on remaining power
+      const remainingCost = (remainingPower / auction.power) * auction.cost;
       const bidWon = acceptedPower > 0;
 
       const result: AuctionResult = {
         acceptedPower,
         remainingPower,
         remainingCost,
+        participantPayout: bid.price,
         bidWon
       };
 
@@ -81,6 +84,14 @@ export default function GridFlexibilityMarket() {
       setAuction({ ...auction, isActive: false });
       setNotification(bidWon ? 'Congratulations! Your bid won the auction!' : 'Your bid did not win the auction.');
     }
+  };
+
+  const resetAuction = () => {
+    setAuction(null);
+    setBid({ power: 0, price: 0 });
+    setAuctionResult(null);
+    setBidPlaced(false);
+    setNotification('');
   };
 
   return (
@@ -97,12 +108,12 @@ export default function GridFlexibilityMarket() {
           {/* Left Side - Grid Operator and Participant */}
           <div className="space-y-8">
             {/* Grid Operator Section - Left Upper Half */}
-            <div className="bg-white rounded-lg shadow-lg p-6 border-l-4 border-blue-500 h-96">
+            <div className="bg-white rounded-lg shadow-lg p-6 border-l-4 border-blue-500">
               <h2 className="text-xl font-semibold mb-4 text-blue-700">Grid Operator</h2>
               
-              {/* Initial State */}
+              {/* Next redispatch event */}
               <div className="mb-6 p-4 bg-gray-50 rounded-lg">
-                <h3 className="font-medium text-gray-800 mb-2">Initial State</h3>
+                <h3 className="font-medium text-gray-800 mb-2">Next redispatch event</h3>
                 <div className="space-y-2">
                   <div className="flex justify-between">
                     <span className="text-sm font-medium text-gray-600">Time:</span>
@@ -144,33 +155,78 @@ export default function GridFlexibilityMarket() {
                 </button>
               </div>
 
+              {/* Reset Button */}
+              <div className="mb-6">
+                <button
+                  onClick={resetAuction}
+                  className="w-full bg-red-600 hover:bg-red-700 text-white font-medium py-2 px-4 rounded-lg transition-colors"
+                >
+                  Reset Auction
+                </button>
+              </div>
+
               {/* Auction Result */}
               {auctionResult && (
                 <div className="p-4 bg-green-50 rounded-lg">
                   <h3 className="font-medium text-green-800 mb-2">Auction Resolved</h3>
-                  <div className="space-y-2">
-                    <p><span className="font-medium">Accepted Participant Power:</span> {auctionResult.acceptedPower} MW</p>
-                    <p><span className="font-medium">Remaining Total Power:</span> {auctionResult.remainingPower} MW</p>
-                    <p><span className="font-medium">Remaining Total Cost:</span> €{auctionResult.remainingCost.toLocaleString()}</p>
+                  <div className="space-y-4 text-black">
+                    {/* Remaining Redispatch Event */}
+                    <div className="p-3 bg-white rounded border-l-2 border-blue-400">
+                      <h4 className="font-medium text-blue-700 mb-2">Remaining Redispatch Event</h4>
+                      <div className="space-y-1">
+                        <div className="flex justify-between">
+                          <span className="text-sm font-medium text-gray-600">Time:</span>
+                          <span className="text-sm text-gray-800">{redispatchEvent.time}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-sm font-medium text-gray-600">Remaining Power:</span>
+                          <span className="text-sm text-gray-800">{auctionResult.remainingPower} MW</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-sm font-medium text-gray-600">Remaining Cost:</span>
+                          <span className="text-sm text-gray-800">€{auctionResult.remainingCost.toLocaleString()}</span>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {/* Participant Payout */}
+                    <div className="p-3 bg-green-100 rounded">
+                      <h4 className="font-medium text-green-700 mb-2">Participant Payout</h4>
+                      <div className="space-y-1">
+                        <p><span className="font-medium">Accepted Power:</span> {auctionResult.acceptedPower} MW</p>
+                        <p><span className="font-medium">Payout Amount:</span> €{auctionResult.participantPayout.toLocaleString()}</p>
+                      </div>
+                    </div>
                   </div>
                 </div>
               )}
             </div>
 
             {/* Participant Section - Left Lower Half */}
-            <div className="bg-white rounded-lg shadow-lg p-6 border-l-4 border-green-500 h-96">
+            <div className="bg-white rounded-lg shadow-lg p-6 border-l-4 border-green-500">
               <h2 className="text-xl font-semibold mb-4 text-green-700">Grid Participant</h2>
               
               {/* Current Auction */}
               {auction && auction.isActive && (
                 <div className="mb-6 p-4 bg-green-50 rounded-lg">
                   <h3 className="font-medium text-green-800 mb-2">Current Ongoing Auction</h3>
-                  <div className="space-y-2">
-                    <p><span className="font-medium">Time:</span> {auction.time}</p>
-                    <p><span className="font-medium">Total Power:</span> {auction.power} MW</p>
-                    <p><span className="font-medium">Total Cost:</span> €{auction.cost.toLocaleString()}</p>
+                  
+                    
+                    <div className="space-y-1">
+                      <div className="flex justify-between">
+                        <span className="text-sm font-medium text-gray-600">Time:</span>
+                        <span className="text-sm text-gray-800">{redispatchEvent.time}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-sm font-medium text-gray-600">Total Power:</span>
+                        <span className="text-sm text-gray-800">{redispatchEvent.power} MW</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-sm font-medium text-gray-600">Total Cost:</span>
+                        <span className="text-sm text-gray-800">€{redispatchEvent.cost.toLocaleString()}</span>
+                      </div>
+                    </div>
                   </div>
-                </div>
               )}
 
               {/* Bid Input */}
@@ -179,27 +235,27 @@ export default function GridFlexibilityMarket() {
                 <div className="space-y-4">
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-600 mb-1">
+                      <label className="block text-sm font-medium text-gray-600  mb-1">
                         Bid Power (MW)
                       </label>
                       <input
                         type="number"
                         value={bid.power}
                         onChange={(e) => setBid({ ...bid, power: Number(e.target.value) })}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                        className="w-full text-black px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
                         placeholder="Enter power in MW"
                       />
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-gray-600 mb-1">
-                        Bid Price (€/MW)
+                        Bid Price (€)
                       </label>
                       <input
                         type="number"
                         value={bid.price}
                         onChange={(e) => setBid({ ...bid, price: Number(e.target.value) })}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-                        placeholder="Enter price per MW"
+                        className="w-full text-black px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                        placeholder="Enter total price in €"
                       />
                     </div>
                   </div>
@@ -251,7 +307,7 @@ export default function GridFlexibilityMarket() {
                 <div className="p-4 bg-green-50 rounded-lg">
                   <h3 className="font-medium text-green-800 mb-2">Bid Placed</h3>
                   <p className="text-sm text-green-700">
-                    Participant has placed a bid for {bid.power} MW at €{bid.price}/MW.
+                    Participant has placed a bid for {bid.power} MW at €{bid.price}.
                   </p>
                 </div>
               )}
@@ -260,10 +316,11 @@ export default function GridFlexibilityMarket() {
               {auctionResult && (
                 <div className="p-4 bg-purple-50 rounded-lg">
                   <h3 className="font-medium text-purple-800 mb-2">Auction Resolved</h3>
-                  <div className="text-sm text-purple-700 space-y-1">
+                  <div className="text-sm text-black space-y-1">
                     <p>• {auctionResult.acceptedPower} MW accepted from participant</p>
                     <p>• {auctionResult.remainingPower} MW remaining for grid operator</p>
-                    <p>• Remaining cost: €{auctionResult.remainingCost.toLocaleString()}</p>
+                    <p>• Remaining redispatch cost: €{auctionResult.remainingCost.toLocaleString()}</p>
+                    <p>• Participant payout: €{auctionResult.participantPayout.toLocaleString()}</p>
                     <p>• Participant bid: {auctionResult.bidWon ? 'WON' : 'LOST'}</p>
                   </div>
                 </div>
