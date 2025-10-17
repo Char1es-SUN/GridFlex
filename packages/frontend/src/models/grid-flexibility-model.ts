@@ -1,4 +1,4 @@
-import { RedispatchEvent, Auction, Bid, AuctionResult, GridFlexibilityEvent } from '../types/grid-flexibility';
+import { RedispatchEvent, Auction, Bid, AuctionResult, GridFlexibilityEvent, BlockchainTransaction } from '../types/grid-flexibility';
 
 // ========== Model State Interface ==========
 
@@ -10,6 +10,7 @@ export interface GridFlexibilityState {
   bidPlaced: boolean;
   notification: string;
   events: GridFlexibilityEvent[];
+  transactions: BlockchainTransaction[];
 }
 
 // ========== Model Actions ==========
@@ -21,6 +22,8 @@ export type GridFlexibilityAction =
   | { type: 'SET_BID_PLACED'; payload: boolean }
   | { type: 'SET_NOTIFICATION'; payload: string }
   | { type: 'ADD_EVENT'; payload: GridFlexibilityEvent }
+  | { type: 'ADD_TRANSACTION'; payload: BlockchainTransaction }
+  | { type: 'UPDATE_TRANSACTION'; payload: BlockchainTransaction }
   | { type: 'RESET_AUCTION' };
 
 // ========== Model Class ==========
@@ -42,7 +45,8 @@ export class GridFlexibilityModel {
       auctionResult: null,
       bidPlaced: false,
       notification: '',
-      events: []
+      events: [],
+      transactions: []
     };
   }
 
@@ -100,6 +104,22 @@ export class GridFlexibilityModel {
         };
         console.log('New events count:', this.state.events.length);
         break;
+      case 'ADD_TRANSACTION':
+        console.log('Adding transaction to model:', action.payload.hash);
+        this.state = { 
+          ...this.state, 
+          transactions: [action.payload, ...this.state.transactions] 
+        };
+        break;
+      case 'UPDATE_TRANSACTION':
+        console.log('Updating transaction in model:', action.payload.hash);
+        this.state = { 
+          ...this.state, 
+          transactions: this.state.transactions.map(tx => 
+            tx.hash === action.payload.hash ? action.payload : tx
+          )
+        };
+        break;
       case 'RESET_AUCTION':
         this.state = {
           ...this.state,
@@ -112,7 +132,8 @@ export class GridFlexibilityModel {
           },
           auctionResult: null,
           bidPlaced: false,
-          notification: ''
+          notification: '',
+          transactions: []
         };
         break;
       default:

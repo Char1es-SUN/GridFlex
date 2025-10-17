@@ -39,6 +39,19 @@ export interface AuctionResult {
   reason?: string;
 }
 
+export interface BlockchainTransaction {
+  hash: string;
+  from: string;
+  to: string;
+  value: string;
+  gasUsed: string;
+  gasPrice: string;
+  data: string;
+  timestamp: number;
+  blockNumber?: number;
+  status: 'pending' | 'confirmed' | 'failed';
+}
+
 // ========== Event Types for Backend Communication ==========
 
 export interface BaseEvent {
@@ -112,7 +125,7 @@ export interface ApiResponse<T> {
   error?: {
     code: string;
     message: string;
-    details?: any;
+    details?: unknown;
   };
   timestamp: string;
 }

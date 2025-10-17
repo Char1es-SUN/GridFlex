@@ -3,6 +3,7 @@ import { GridFlexibilityModel } from '../models/grid-flexibility-model';
 import { GridFlexibilityController } from '../controllers/grid-flexibility-controller';
 import { GridFlexibilityService } from '../services/grid-flexibility-service';
 import { RedispatchEvent } from '../types/grid-flexibility';
+import { HardhatBlockchainService } from '../services/hardhat-service';
 
 // ========== Custom Hook ==========
 
@@ -11,7 +12,8 @@ export function useGridFlexibility(
   initialRedispatchEvent: RedispatchEvent
 ) {
   const [model] = useState(() => new GridFlexibilityModel(initialRedispatchEvent));
-  const [controller] = useState(() => new GridFlexibilityController(service, model));
+  const [blockchainService] = useState(() => new HardhatBlockchainService());
+  const [controller] = useState(() => new GridFlexibilityController(service, model, blockchainService));
   const [state, setState] = useState(model.getState());
 
   useEffect(() => {
@@ -19,7 +21,19 @@ export function useGridFlexibility(
     return unsubscribe;
   }, [model]);
 
-  // No need to create test event here - it will be created by the controller
+  // Create test event only after hydration
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const testEvent = {
+        eventId: `evt_${Date.now()}_test`,
+        timestamp: new Date().toISOString(),
+        eventType: 'auction.reset' as const,
+        version: '1.0.0',
+        payload: { reason: 'System initialized' }
+      };
+      service.publishEvent(testEvent);
+    }
+  }, [service]);
 
   return {
     state,

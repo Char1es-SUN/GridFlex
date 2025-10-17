@@ -1,17 +1,22 @@
 import { GridFlexibilityService } from '../services/grid-flexibility-service';
-import { GridFlexibilityModel, GridFlexibilityAction } from '../models/grid-flexibility-model';
-import { AuctionReset } from '../types/grid-flexibility';
+import { GridFlexibilityModel } from '../models/grid-flexibility-model';
+import { HardhatBlockchainService, HardhatTransactionBuilder, TransactionConstructionContext } from '../services/hardhat-service';
+import { GridFlexibilityEvent } from '../types/grid-flexibility';
 
 // ========== Controller Class ==========
 
 export class GridFlexibilityController {
   private service: GridFlexibilityService;
   private model: GridFlexibilityModel;
+  private blockchainService: HardhatBlockchainService;
+  private transactionBuilder: HardhatTransactionBuilder;
   private isSubscribed: boolean = false;
 
-  constructor(service: GridFlexibilityService, model: GridFlexibilityModel) {
+  constructor(service: GridFlexibilityService, model: GridFlexibilityModel, blockchainService: HardhatBlockchainService) {
     this.service = service;
     this.model = model;
+    this.blockchainService = blockchainService;
+    this.transactionBuilder = new HardhatTransactionBuilder();
     this.setupEventSubscription();
   }
 
@@ -25,10 +30,13 @@ export class GridFlexibilityController {
 
     console.log('Setting up event subscription');
     
-    // Set up direct event published callback for UI display
-    this.service.setEventPublishedCallback((event) => {
+    // Set up direct event published callback for UI display and blockchain transactions
+    this.service.setEventPublishedCallback(async (event: GridFlexibilityEvent) => {
       console.log('Event published, adding to UI:', event);
       this.model.dispatch({ type: 'ADD_EVENT', payload: event });
+      
+      // Create blockchain transaction for this event
+      await this.createTransactionFromEvent(event);
     });
     
     // Subscribe to events for business logic (if needed)
@@ -39,16 +47,69 @@ export class GridFlexibilityController {
     
     this.isSubscribed = true;
 
-    // Create test event only once after hydration
-    if (typeof window !== 'undefined') {
-      const testEvent = {
-        eventId: `evt_${Date.now()}_test`,
-        timestamp: new Date().toISOString(),
-        eventType: 'auction.reset' as const,
-        version: '1.0.0',
-        payload: { reason: 'System initialized' }
+    // Test event will be created in the hook after hydration
+  }
+
+  // ========== Blockchain Integration ==========
+
+  /**
+   * TRANSACTION CONSTRUCTION POINT
+   * 
+   * This method creates blockchain transactions from event data.
+   * The transaction construction logic is isolated here and can be easily swapped.
+   * 
+   * To change transaction construction:
+   * 1. Replace the transactionBuilder in the constructor
+   * 2. Or modify the buildTransaction call below
+   * 3. The event payload contains all necessary data
+   */
+  private async createTransactionFromEvent(event: GridFlexibilityEvent): Promise<void> {
+    try {
+
+      // Check if Hardhat is running
+      const isRunning = await this.blockchainService.isHardhatRunning();
+      if (!isRunning) {
+        console.warn('⚠️ Hardhat node is not running. Skipping transaction creation.');
+        this.model.dispatch({ 
+          type: 'SET_NOTIFICATION', 
+          payload: 'Hardhat node not running. Start with: npm run chain' 
+        });
+        return;
+      }
+
+      // Ensure wallet is connected
+      const walletInfo = await this.blockchainService.getWalletInfo();
+      if (!walletInfo) {
+        await this.blockchainService.connectWallet();
+      }
+
+      // Build transaction from event data
+      const context: TransactionConstructionContext = {
+        eventType: event.eventType,
+        eventPayload: event.payload,
+        timestamp: event.timestamp,
+        eventId: event.eventId
       };
-      this.service.publishEvent(testEvent);
+
+      const transactionData = this.transactionBuilder.buildTransaction(context);
+      
+      // Store event on-chain
+      const transaction = await this.blockchainService.storeEvent(
+        transactionData.eventType,
+        transactionData.eventId,
+        transactionData.payload
+      );
+      
+      // Add transaction to model
+      this.model.dispatch({ type: 'ADD_TRANSACTION', payload: transaction });
+      
+      console.log('🚀 Transaction sent:', transaction.hash);
+    } catch (error) {
+      console.error('❌ Failed to create transaction:', error);
+      this.model.dispatch({ 
+        type: 'SET_NOTIFICATION', 
+        payload: `Transaction failed: ${error instanceof Error ? error.message : 'Unknown error'}` 
+      });
     }
   }
 

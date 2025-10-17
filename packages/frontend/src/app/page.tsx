@@ -246,6 +246,48 @@ export default function GridFlexibilityMarket() {
               )}
             </div>
           </div>
+
+          {/* Blockchain Transactions Section */}
+          <div className="bg-white rounded-lg shadow-lg p-6 border-l-4 border-blue-500 mt-6">
+            <h2 className="text-xl font-semibold mb-4 text-blue-700">Blockchain Transactions</h2>
+            
+            <div className="space-y-4">
+              {state.transactions.length === 0 ? (
+                <div className="p-4 bg-gray-50 rounded-lg">
+                  <p className="text-sm text-gray-600 text-center">No transactions yet. Events will automatically create blockchain transactions.</p>
+                </div>
+              ) : (
+                state.transactions.map((transaction, index) => (
+                  <div key={`${transaction.hash}-${index}`} className="p-4 bg-gray-50 rounded-lg border-l-4 border-blue-400">
+                    <div className="flex justify-between items-start mb-2">
+                      <h3 className="font-medium text-blue-800 text-sm">
+                        Transaction {transaction.status === 'pending' ? '⏳' : transaction.status === 'confirmed' ? '✅' : '❌'}
+                      </h3>
+                      <span className="text-xs text-gray-500">
+                        {new Date(transaction.timestamp).toLocaleTimeString()}
+                      </span>
+                    </div>
+                    <div className="text-xs text-gray-600 mb-2 space-y-1">
+                      <p><span className="font-medium">Hash:</span> <code className="bg-gray-200 px-1 rounded">{transaction.hash}</code></p>
+                      <p><span className="font-medium">From:</span> <code className="bg-gray-200 px-1 rounded">{transaction.from}</code></p>
+                      <p><span className="font-medium">To:</span> <code className="bg-gray-200 px-1 rounded">{transaction.to}</code></p>
+                      <p><span className="font-medium">Gas Used:</span> {transaction.gasUsed}</p>
+                      <p><span className="font-medium">Gas Price:</span> {transaction.gasPrice} wei</p>
+                      {transaction.blockNumber && (
+                        <p><span className="font-medium">Block:</span> {transaction.blockNumber}</p>
+                      )}
+                    </div>
+                    <div className="bg-white p-3 rounded border">
+                      <p className="text-xs text-gray-600 mb-1 font-medium">Transaction Data:</p>
+                      <pre className="text-xs text-gray-800 whitespace-pre-wrap overflow-x-auto">
+                        {transaction.data}
+                      </pre>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
         </div>
       </div>
     </div>

@@ -9,7 +9,6 @@ import {
   RedispatchEventCreated,
   AuctionBroadcasted,
   BidSubmitted,
-  AuctionTriggered,
   AuctionResolved,
   AuctionReset
 } from '../types/grid-flexibility';
@@ -36,6 +35,7 @@ export interface GridFlexibilityService {
   
   // Event subscription
   subscribeToEvents(callback: (event: GridFlexibilityEvent) => void): () => void;
+  setEventPublishedCallback(callback: (event: GridFlexibilityEvent) => void): void;
 }
 
 // ========== Utility Functions ==========
