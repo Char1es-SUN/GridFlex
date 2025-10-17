@@ -1,110 +1,191 @@
-# FHEVM Hardhat Template
+# ETHRome 2025 - Grid Flexibility Market Demo
 
-A Hardhat-based template for developing Fully Homomorphic Encryption (FHE) enabled Solidity smart contracts using the
-FHEVM protocol by Zama.
+A comprehensive demo showcasing a local grid flexibility market with FHEVM smart contracts and a Next.js frontend interface.
 
-## Quick Start
+## 🏗️ Project Structure
 
-For detailed instructions see:
-[FHEVM Hardhat Quick Start Tutorial](https://docs.zama.ai/protocol/solidity-guides/getting-started/quick-start-tutorial)
+This is a monorepo containing two main packages:
+
+```
+ethrome2025/
+├── packages/
+│   ├── hardhat/          # FHEVM Smart Contracts
+│   │   ├── contracts/    # Solidity contracts
+│   │   ├── deploy/       # Deployment scripts
+│   │   ├── tasks/        # Hardhat tasks
+│   │   ├── test/         # Contract tests
+│   │   └── ...
+│   └── frontend/         # Next.js Frontend Demo
+│       ├── src/
+│       │   └── app/      # Next.js app directory
+│       └── ...
+├── package.json          # Root workspace configuration
+└── start-demo.sh         # Quick start script
+```
+
+## 🚀 Quick Start
 
 ### Prerequisites
-
-- **Node.js**: Version 20 or higher
-- **npm or yarn/pnpm**: Package manager
+- Node.js >= 20
+- npm >= 7.0.0
 
 ### Installation
+```bash
+# Install all dependencies
+npm run install:all
 
-1. **Install dependencies**
-
-   ```bash
-   npm install
-   ```
-
-2. **Set up environment variables**
-
-   ```bash
-   npx hardhat vars set MNEMONIC
-
-   # Set your Infura API key for network access
-   npx hardhat vars set INFURA_API_KEY
-
-   # Optional: Set Etherscan API key for contract verification
-   npx hardhat vars set ETHERSCAN_API_KEY
-   ```
-
-3. **Compile and test**
-
-   ```bash
-   npm run compile
-   npm run test
-   ```
-
-4. **Deploy to local network**
-
-   ```bash
-   # Start a local FHEVM-ready node
-   npx hardhat node
-   # Deploy to local network
-   npx hardhat deploy --network localhost
-   ```
-
-5. **Deploy to Sepolia Testnet**
-
-   ```bash
-   # Deploy to Sepolia
-   npx hardhat deploy --network sepolia
-   # Verify contract on Etherscan
-   npx hardhat verify --network sepolia <CONTRACT_ADDRESS>
-   ```
-
-6. **Test on Sepolia Testnet**
-
-   ```bash
-   # Once deployed, you can run a simple test on Sepolia.
-   npx hardhat test --network sepolia
-   ```
-
-## 📁 Project Structure
-
-```
-fhevm-hardhat-template/
-├── contracts/           # Smart contract source files
-│   └── FHECounter.sol   # Example FHE counter contract
-├── deploy/              # Deployment scripts
-├── tasks/               # Hardhat custom tasks
-├── test/                # Test files
-├── hardhat.config.ts    # Hardhat configuration
-└── package.json         # Dependencies and scripts
+# Or install individually
+npm install
+npm install --workspace=packages/hardhat
+npm install --workspace=packages/frontend
 ```
 
-## 📜 Available Scripts
+### Running the Demo
+```bash
+# Start the frontend demo
+npm run dev
+# or
+./start-demo.sh
 
-| Script             | Description              |
-| ------------------ | ------------------------ |
-| `npm run compile`  | Compile all contracts    |
-| `npm run test`     | Run all tests            |
-| `npm run coverage` | Generate coverage report |
-| `npm run lint`     | Run linting checks       |
-| `npm run clean`    | Clean build artifacts    |
+# The demo will be available at http://localhost:3000
+```
+
+## 📦 Packages
+
+### @ethrome2025/hardhat
+FHEVM-based smart contracts for grid flexibility market operations.
+
+**Key Features:**
+- FHEVM integration for privacy-preserving computations
+- Grid flexibility market contracts
+- Comprehensive testing suite
+- Deployment scripts for local and testnet
+
+**Available Scripts:**
+```bash
+npm run hardhat:compile    # Compile contracts
+npm run hardhat:test       # Run tests
+npm run hardhat:chain      # Start local blockchain
+npm run hardhat:deploy:localhost  # Deploy to localhost
+npm run hardhat:deploy:sepolia    # Deploy to Sepolia testnet
+```
+
+### @ethrome2025/frontend
+Next.js frontend demo showcasing the grid flexibility market interface.
+
+**Key Features:**
+- Grid operator interface
+- Participant interface
+- Real-time system status
+- Interactive auction simulation
+- Responsive design with Tailwind CSS
+
+**Available Scripts:**
+```bash
+npm run dev      # Start development server
+npm run build    # Build for production
+npm run start    # Start production server
+```
+
+## 🎯 Grid Flexibility Market Demo
+
+The frontend demo simulates a local grid flexibility market with:
+
+### Grid Operator Interface
+- **Redispatch Event Display**: Shows upcoming events with time, power, and cost
+- **Auction Management**: Broadcast and trigger auctions
+- **Results Visualization**: View accepted bids and remaining requirements
+
+### Participant Interface
+- **Auction View**: See active auctions from grid operators
+- **Bid Submission**: Enter power and price for flexibility services
+- **Status Notifications**: Real-time feedback on bid acceptance
+
+### System Monitoring
+- **Real-time Updates**: Track all system changes
+- **Process Flow**: Step-by-step auction lifecycle
+- **Status Dashboard**: Current system state overview
+
+## 🛠️ Development
+
+### Workspace Commands
+```bash
+# Frontend development
+npm run dev
+
+# Hardhat development
+npm run hardhat:compile
+npm run hardhat:test
+npm run hardhat:chain
+
+# Linting and formatting
+npm run lint
+npm run typecheck
+
+# Clean all build artifacts
+npm run clean
+```
+
+### Individual Package Development
+```bash
+# Work on hardhat package
+cd packages/hardhat
+npm run compile
+npm run test
+
+# Work on frontend package
+cd packages/frontend
+npm run dev
+npm run build
+```
+
+## 🧪 Testing
+
+### Smart Contracts
+```bash
+npm run hardhat:test
+```
+
+### Frontend
+```bash
+cd packages/frontend
+npm run lint
+```
 
 ## 📚 Documentation
 
-- [FHEVM Documentation](https://docs.zama.ai/fhevm)
-- [FHEVM Hardhat Setup Guide](https://docs.zama.ai/protocol/solidity-guides/getting-started/setup)
-- [FHEVM Testing Guide](https://docs.zama.ai/protocol/solidity-guides/development-guide/hardhat/write_test)
-- [FHEVM Hardhat Plugin](https://docs.zama.ai/protocol/solidity-guides/development-guide/hardhat)
+- [Frontend Demo Guide](./packages/frontend/README.md)
+- [Smart Contracts Documentation](./packages/hardhat/README.md)
+
+## 🔧 Configuration
+
+### Environment Variables
+Create `.env` files in the respective package directories:
+
+**packages/hardhat/.env:**
+```env
+SEPOLIA_RPC_URL=your_sepolia_rpc_url
+PRIVATE_KEY=your_private_key
+ETHERSCAN_API_KEY=your_etherscan_api_key
+```
+
+**packages/frontend/.env.local:**
+```env
+NEXT_PUBLIC_API_URL=http://localhost:3000
+```
 
 ## 📄 License
 
-This project is licensed under the BSD-3-Clause-Clear License. See the [LICENSE](LICENSE) file for details.
+MIT License - see LICENSE file for details.
 
-## 🆘 Support
+## 🤝 Contributing
 
-- **GitHub Issues**: [Report bugs or request features](https://github.com/zama-ai/fhevm/issues)
-- **Documentation**: [FHEVM Docs](https://docs.zama.ai)
-- **Community**: [Zama Discord](https://discord.gg/zama)
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Run tests and linting
+5. Submit a pull request
 
----
+## 📞 Support
 
-**Built with ❤️ by the Zama team**
+For questions or support, please open an issue in the repository.
