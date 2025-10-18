@@ -10,12 +10,15 @@ const CHAIN_ID = 31337;
 
 // Hardhat default accounts are available via private keys
 
-// EventStorage contract ABI (minimal interface)
-const EVENT_STORAGE_ABI = [
-  "function storeEvent(string memory eventType, string memory eventId, string memory payload) external",
-  "function getEventCount() external view returns (uint256)",
-  "function getEvent(uint256 index) external view returns (tuple(string eventType, string eventId, uint256 timestamp, string payload, address sender, uint256 blockNumber))",
-  "event EventStored(uint256 indexed index, string eventType, string eventId, address indexed sender)"
+// DataCollector contract ABI
+const DATA_COLLECTOR_ABI = [
+  "function startCollection() external",
+  "function submitData(uint32 price, uint32 quantity) external",
+  "function endCollection() external",
+  "function getCollectedData() external view returns (uint32[] memory, uint32[] memory)",
+  "function getBroadcastData() external view returns (string[] memory)",
+  "function collecting() external view returns (bool)",
+  "function owner() external view returns (address)"
 ];
 
 // ========== Hardhat Blockchain Service ==========
@@ -23,11 +26,13 @@ const EVENT_STORAGE_ABI = [
 export class HardhatBlockchainService {
   private provider: ethers.JsonRpcProvider;
   private wallet: ethers.Wallet | null = null;
-  private eventStorageContract: ethers.Contract | null = null;
-  private eventStorageAddress: string | null = null;
+  private dataCollectorContract: ethers.Contract | null = null;
+  private dataCollectorAddress: string | null = null;
+  private participantWallets: Map<string, ethers.Wallet> = new Map();
 
   constructor() {
     this.provider = new ethers.JsonRpcProvider(HARDHAT_RPC_URL);
+    this.setupDataCollectorContract();
   }
 
   /**
@@ -42,8 +47,8 @@ export class HardhatBlockchainService {
       console.log('🔗 Connected to Hardhat network');
       console.log('📍 Wallet address:', this.wallet.address);
       
-      // Get the EventStorage contract address from deployment
-      await this.setupEventStorageContract();
+      // Get the DataCollector contract address from deployment
+      await this.setupDataCollectorContract();
     } catch (error) {
       console.error('❌ Failed to connect to Hardhat:', error);
       throw new Error('Failed to connect to Hardhat network. Make sure Hardhat node is running.');
@@ -71,40 +76,27 @@ export class HardhatBlockchainService {
   }
 
   /**
-   * Store an event on-chain using the EventStorage contract
+   * Start data collection on DataCollector contract
    */
-  async storeEvent(
-    eventType: string,
-    eventId: string,
-    payload: string
-  ): Promise<BlockchainTransaction> {
+  async startCollection(): Promise<BlockchainTransaction> {
     if (!this.wallet) {
       await this.connectWallet();
     }
 
-    if (!this.eventStorageContract) {
-      throw new Error('EventStorage contract not available');
+    if (!this.dataCollectorContract) {
+      throw new Error('DataCollector contract not available');
     }
 
     try {
-      console.log('📝 Storing event on-chain:', eventType, eventId);
+      console.log('📝 Starting data collection on-chain');
       
       // Estimate gas
-      const gasEstimate = await this.eventStorageContract.storeEvent.estimateGas(
-        eventType,
-        eventId,
-        payload
-      );
+      const gasEstimate = await this.dataCollectorContract.startCollection.estimateGas();
 
       // Send transaction
-      const tx = await this.eventStorageContract.storeEvent(
-        eventType,
-        eventId,
-        payload,
-        {
-          gasLimit: gasEstimate + BigInt(10000), // Add some buffer
-        }
-      );
+      const tx = await this.dataCollectorContract.startCollection({
+        gasLimit: gasEstimate + BigInt(10000), // Add some buffer
+      });
 
       console.log('🚀 Transaction sent:', tx.hash);
 
@@ -118,7 +110,7 @@ export class HardhatBlockchainService {
       const transaction: BlockchainTransaction = {
         hash: tx.hash,
         from: this.wallet!.address,
-        to: this.eventStorageAddress!,
+        to: this.dataCollectorAddress!,
         value: '0',
         gasUsed: receipt.gasUsed.toString(),
         gasPrice: tx.gasPrice?.toString() || '0',
@@ -132,29 +124,171 @@ export class HardhatBlockchainService {
       return transaction;
 
     } catch (error) {
-      console.error('❌ Failed to store event:', error);
+      console.error('❌ Failed to start collection:', error);
       throw error;
     }
   }
 
   /**
-   * Get the EventStorage contract address from deployment
+   * Submit data to DataCollector contract
    */
-  private async setupEventStorageContract(): Promise<void> {
+  async submitData(price: number, quantity: number, participantId: string): Promise<BlockchainTransaction> {
+    if (!this.dataCollectorContract) {
+      throw new Error('DataCollector contract not available');
+    }
+
+    try {
+      // Get wallet for this participant
+      const participantWallet = this.getParticipantWallet(participantId);
+      
+      // Create contract instance for this participant
+      const participantContract = new ethers.Contract(
+        this.dataCollectorAddress!,
+        DATA_COLLECTOR_ABI,
+        participantWallet
+      );
+
+      console.log('📝 Submitting data on-chain:', price, quantity, 'from participant:', participantId);
+      
+      // Estimate gas
+      const gasEstimate = await participantContract.submitData.estimateGas(price, quantity);
+
+      // Send transaction
+      const tx = await participantContract.submitData(price, quantity, {
+        gasLimit: gasEstimate + BigInt(10000), // Add some buffer
+      });
+
+      console.log('🚀 Transaction sent:', tx.hash);
+
+      // Wait for confirmation
+      const receipt = await tx.wait();
+      
+      if (!receipt) {
+        throw new Error('Transaction failed');
+      }
+
+      const transaction: BlockchainTransaction = {
+        hash: tx.hash,
+        from: participantWallet.address,
+        to: this.dataCollectorAddress!,
+        value: '0',
+        gasUsed: receipt.gasUsed.toString(),
+        gasPrice: tx.gasPrice?.toString() || '0',
+        data: tx.data,
+        timestamp: Date.now(),
+        blockNumber: receipt.blockNumber,
+        status: 'confirmed'
+      };
+
+      console.log('✅ Transaction confirmed:', tx.hash);
+      return transaction;
+
+    } catch (error) {
+      console.error('❌ Failed to submit data:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * End data collection on DataCollector contract
+   */
+  async endCollection(): Promise<BlockchainTransaction> {
+    if (!this.wallet) {
+      await this.connectWallet();
+    }
+
+    if (!this.dataCollectorContract) {
+      throw new Error('DataCollector contract not available');
+    }
+
+    try {
+      console.log('📝 Ending data collection on-chain');
+      
+      // Estimate gas
+      const gasEstimate = await this.dataCollectorContract.endCollection.estimateGas();
+
+      // Send transaction
+      const tx = await this.dataCollectorContract.endCollection({
+        gasLimit: gasEstimate + BigInt(10000), // Add some buffer
+      });
+
+      console.log('🚀 Transaction sent:', tx.hash);
+
+      // Wait for confirmation
+      const receipt = await tx.wait();
+      
+      if (!receipt) {
+        throw new Error('Transaction failed');
+      }
+
+      const transaction: BlockchainTransaction = {
+        hash: tx.hash,
+        from: this.wallet!.address,
+        to: this.dataCollectorAddress!,
+        value: '0',
+        gasUsed: receipt.gasUsed.toString(),
+        gasPrice: tx.gasPrice?.toString() || '0',
+        data: tx.data,
+        timestamp: Date.now(),
+        blockNumber: receipt.blockNumber,
+        status: 'confirmed'
+      };
+
+      console.log('✅ Transaction confirmed:', tx.hash);
+      return transaction;
+
+    } catch (error) {
+      console.error('❌ Failed to end collection:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get collected data from DataCollector contract
+   */
+  async getCollectedData(): Promise<{ prices: number[], quantities: number[] }> {
+    if (!this.wallet) {
+      await this.connectWallet();
+    }
+
+    if (!this.dataCollectorContract) {
+      throw new Error('DataCollector contract not available');
+    }
+
+    try {
+      console.log('📝 Getting collected data from contract');
+      
+      const [prices, quantities] = await this.dataCollectorContract.getCollectedData();
+      
+      return {
+        prices: prices.map((p: bigint) => Number(p)),
+        quantities: quantities.map((q: bigint) => Number(q))
+      };
+
+    } catch (error) {
+      console.error('❌ Failed to get collected data:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get the DataCollector contract address from deployment
+   */
+  private async setupDataCollectorContract(): Promise<void> {
     try {
       // Get the contract address from Hardhat's deployment system
-      this.eventStorageAddress = '0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512'; // EventStorage contract address
+      this.dataCollectorAddress = '0xDc64a140Aa3E981100a9becA4E685f962f0cF6C9'; // DataCollector contract address
       
-      if (this.wallet && this.eventStorageAddress) {
-        this.eventStorageContract = new ethers.Contract(
-          this.eventStorageAddress,
-          EVENT_STORAGE_ABI,
+      if (this.wallet && this.dataCollectorAddress) {
+        this.dataCollectorContract = new ethers.Contract(
+          this.dataCollectorAddress,
+          DATA_COLLECTOR_ABI,
           this.wallet
         );
-        console.log('📄 EventStorage contract connected:', this.eventStorageAddress);
+        console.log('📄 DataCollector contract connected:', this.dataCollectorAddress);
       }
     } catch (error) {
-      console.warn('⚠️ Could not connect to EventStorage contract:', error);
+      console.warn('⚠️ Could not connect to DataCollector contract:', error);
     }
   }
 
@@ -162,13 +296,13 @@ export class HardhatBlockchainService {
    * Get Hardhat private key for account index
    */
   private getHardhatPrivateKey(accountIndex: number): string {
-    // These are the well-known Hardhat private keys
+    // Hardhat standard accounts (each has 10,000 ETH)
     const privateKeys = [
-      '0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80',
-      '0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d',
-      '0x5de4111daa5ba4e0a4da4a480485a311069d29d4e7852e2724db0bd17c3c0cd6',
-      '0x7c852118294e51e653712a81e05800f419141751be58f605c371e15141b007a6d',
-      '0x47e179ec197488593b187f80a00eb0da91f1b9d0b13f8733639f4cbd98424e51'
+      '0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80', // Account #0: Grid Operator
+      '0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d', // Account #1: Participant 1
+      '0x5de4111afa1a4b94908f83103eb1f1706367c2e68ca870fc3fb9a804cdab365a', // Account #2: Participant 2
+      '0x7c852118294e51e653712a81e05800f419141751be58f605c371e15141b007a6',  // Account #3: Participant 3
+      '0x47e179ec197488593b187f80a00eb0da91f1b9d0b13f8733639f19c30a34926a'  // Account #4: Participant 4
     ];
 
     if (accountIndex >= privateKeys.length) {
@@ -191,10 +325,43 @@ export class HardhatBlockchainService {
   }
 
   /**
+   * Get or create a wallet for a specific participant
+   * Account mapping:
+   * - Account 0: Grid Operator (contract owner)
+   * - Account 1: Participant 1
+   * - Account 2: Participant 2  
+   * - Account 3: Participant 3
+   * - Account 4: Participant 4
+   */
+  private getParticipantWallet(participantId: string): ethers.Wallet {
+    if (!this.participantWallets.has(participantId)) {
+      // Map participant IDs to account indices
+      const participantAccountMap: { [key: string]: number } = {
+        'participant-1': 1,
+        'participant-2': 2,
+        'participant-3': 3,
+        'participant-4': 4
+      };
+      
+      const accountIndex = participantAccountMap[participantId];
+      if (accountIndex === undefined) {
+        throw new Error(`Unknown participant ID: ${participantId}`);
+      }
+      
+      const privateKey = this.getHardhatPrivateKey(accountIndex);
+      const wallet = new ethers.Wallet(privateKey, this.provider);
+      
+      this.participantWallets.set(participantId, wallet);
+      console.log(`Created wallet for ${participantId} using account ${accountIndex}:`, wallet.address);
+    }
+    return this.participantWallets.get(participantId)!;
+  }
+
+  /**
    * Get contract address (for debugging)
    */
   getContractAddress(): string | null {
-    return this.eventStorageAddress;
+    return this.dataCollectorAddress;
   }
 }
 

@@ -18,8 +18,70 @@ export default function GridFlexibilityMarket() {
     status: 'pending'
   });
 
+  // State for transaction data format toggle
+  const [transactionDataFormats, setTransactionDataFormats] = useState<{ [key: string]: 'encoded' | 'decoded' }>({});
+
   // Use the custom hook for state management
   const { state, controller, isAuctionActive, canTriggerAuction, hasEvents, canBroadcastBids } = useGridFlexibility(service, redispatchEvent);
+
+  // Function to decode transaction data
+  const decodeTransactionData = (data: string): string => {
+    try {
+      // Remove 0x prefix if present
+      const cleanData = data.startsWith('0x') ? data.slice(2) : data;
+      
+      // Check if it's a function call (starts with 4-byte function selector)
+      if (cleanData.length >= 8) {
+        const functionSelector = cleanData.slice(0, 8);
+        
+        // Map known function selectors to their names
+        const functionMap: { [key: string]: string } = {
+          '7072216c': 'submitData(uint32,uint32)',
+          '085a1daa': 'startCollection()',
+          '2efa7ebe': 'endCollection()',
+          'bf4cbd06': 'getCollectedData()',
+          '5dccc90d': 'storeEvent(string,string,string)', // Old function
+          '8c5be1e5': 'approve(address,uint256)',
+          '095ea7b3': 'approve(address,uint256)',
+          'a9059cbb': 'transfer(address,uint256)',
+          '23b872dd': 'transferFrom(address,address,uint256)'
+        };
+        
+        const functionName = functionMap[functionSelector] || `Unknown function (${functionSelector})`;
+        
+        // Decode parameters if it's a known function
+        if (functionSelector === '7072216c') {
+          // submitData(uint32,uint32) - decode the two uint32 parameters
+          const param1 = parseInt(cleanData.slice(8, 72), 16);
+          const param2 = parseInt(cleanData.slice(72, 136), 16);
+          return `${functionName}\nParameters:\n  price: ${param1}\n  quantity: ${param2}`;
+        } else if (functionSelector === '085a1daa') {
+          // startCollection() - no parameters
+          return `${functionName}\nParameters: none`;
+        } else if (functionSelector === '2efa7ebe') {
+          // endCollection() - no parameters
+          return `${functionName}\nParameters: none`;
+        } else if (functionSelector === 'bf4cbd06') {
+          // getCollectedData() - no parameters
+          return `${functionName}\nParameters: none`;
+        } else {
+          return `${functionName}\nRaw data: ${data}`;
+        }
+      }
+      
+      return `Raw data: ${data}`;
+    } catch (error) {
+      return `Error decoding: ${data}`;
+    }
+  };
+
+  // Function to toggle transaction data format
+  const toggleTransactionDataFormat = (transactionHash: string) => {
+    setTransactionDataFormats(prev => ({
+      ...prev,
+      [transactionHash]: prev[transactionHash] === 'decoded' ? 'encoded' : 'decoded'
+    }));
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 p-6">
@@ -285,41 +347,8 @@ export default function GridFlexibilityMarket() {
             </div>
           </div>
 
-          {/* Right Side - System Events - Right Half */}
-          <div className="bg-white rounded-lg shadow-lg p-6 border-l-4 border-purple-500">
-            <h2 className="text-xl font-semibold mb-4 text-purple-700">System Events</h2>
-            
-            <div className="space-y-4">
-              {!hasEvents ? (
-                <div className="p-4 bg-gray-50 rounded-lg">
-                  <p className="text-sm text-gray-600 text-center">No events yet. Start the auction workflow to see events.</p>
-                </div>
-              ) : (
-                state.events.map((event, index) => (
-                  <div key={`${event.eventId}-${index}`} className="p-4 bg-gray-50 rounded-lg border-l-4 border-purple-400">
-                    <div className="flex justify-between items-start mb-2">
-                      <h3 className="font-medium text-purple-800 text-sm">{event.eventType}</h3>
-                      <span className="text-xs text-gray-500">
-                        {new Date(event.timestamp).toLocaleTimeString()}
-                      </span>
-                    </div>
-                    <div className="text-xs text-gray-600 mb-2">
-                      <p><span className="font-medium">Event ID:</span> {event.eventId}</p>
-                      <p><span className="font-medium">Version:</span> {event.version}</p>
-                    </div>
-                    <div className="bg-white p-3 rounded border">
-                      <pre className="text-xs text-gray-800 whitespace-pre-wrap overflow-x-auto">
-                        {JSON.stringify(event.payload, null, 2)}
-                      </pre>
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
-          </div>
-
-          {/* Blockchain Transactions Section */}
-          <div className="bg-white rounded-lg shadow-lg p-6 border-l-4 border-blue-500 mt-6">
+          {/* Right Side - Blockchain Transactions - Right Half */}
+          <div className="bg-white rounded-lg shadow-lg p-6 border-l-4 border-blue-500">
             <h2 className="text-xl font-semibold mb-4 text-blue-700">Blockchain Transactions</h2>
             
             <div className="space-y-4">
@@ -349,9 +378,20 @@ export default function GridFlexibilityMarket() {
                       )}
                     </div>
                     <div className="bg-white p-3 rounded border">
-                      <p className="text-xs text-gray-600 mb-1 font-medium">Transaction Data:</p>
+                      <div className="flex justify-between items-center mb-2">
+                        <p className="text-xs text-gray-600 font-medium">Transaction Data:</p>
+                        <button
+                          onClick={() => toggleTransactionDataFormat(transaction.hash)}
+                          className="text-xs bg-blue-100 hover:bg-blue-200 text-blue-800 px-2 py-1 rounded transition-colors"
+                        >
+                          {transactionDataFormats[transaction.hash] === 'decoded' ? 'Show Encoded' : 'Show Decoded'}
+                        </button>
+                      </div>
                       <pre className="text-xs text-gray-800 whitespace-pre-wrap overflow-x-auto">
-                        {transaction.data}
+                        {transactionDataFormats[transaction.hash] === 'decoded' 
+                          ? decodeTransactionData(transaction.data)
+                          : transaction.data
+                        }
                       </pre>
                     </div>
                   </div>

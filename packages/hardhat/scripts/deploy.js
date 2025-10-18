@@ -4,9 +4,9 @@ async function main() {
   
   const DataCollector = await hre.ethers.getContractFactory("DataCollector");
 
-  const collector = await DataCollector.deploy();
+  const dataCollector = await DataCollector.deploy();
 
-  console.log("DataCollector deployed to:", collector.target);
+  console.log("DataCollector deployed to:", dataCollector.target);
 }
 
 main()
