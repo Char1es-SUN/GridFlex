@@ -100,11 +100,10 @@ export default function GridFlexibilityMarket() {
                   
                   {/* Combined Auction Results */}
                   <div className="p-4 bg-white rounded-lg border-l-4 border-green-400">
-                    <h4 className="font-medium text-green-700 mb-4">Auction Results</h4>
                     <div className="space-y-6">
                       {/* Remaining Redispatch Event */}
                       <div className="space-y-3">
-                        <h5 className="font-medium text-gray-700 text-sm">Remaining Redispatch Event</h5>
+                        <h5 className="font-medium text-gray-700">Remaining Redispatch Event</h5>
                         <div className="space-y-2">
                           <div className="flex justify-between">
                             <span className="text-sm font-medium text-gray-600">Time:</span>
@@ -123,7 +122,7 @@ export default function GridFlexibilityMarket() {
                       
                       {/* Participant Payout */}
                       <div className="space-y-3">
-                        <h5 className="font-medium text-gray-700 text-sm">Participant Payout</h5>
+                        <h5 className="font-medium text-gray-700">Participant Payout</h5>
                         <div className="space-y-2">
                           <div className="flex justify-between">
                             <span className="text-sm font-medium text-gray-600">Accepted Power:</span>
