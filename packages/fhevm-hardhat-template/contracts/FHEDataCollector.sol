@@ -46,8 +46,10 @@ contract FHEDataCollector is SepoliaConfig {
         euint32 price = FHE.fromExternal(_price, priceProof);
         euint32 quantity = FHE.fromExternal(_quantity, quantityProof);
 
-        price.allow(msg.sender, owner);
-        quantity.allow(msg.sender, owner);
+        FHE.allowThis(price);
+        FHE.allowThis(quantity);
+        FHE.allow(price, owner);
+        FHE.allow(quantity, owner);
 
         bidprice.push(price);
         bidquantity.push(quantity);
