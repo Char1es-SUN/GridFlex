@@ -5,7 +5,7 @@ contract DataCollector {
     address public owner;
     uint32[] public bidprice;
     uint32[] public bidquantity;
-    string[] public resolution;
+    bool[] public resolution;
     bool public collecting;
 
     constructor() {
@@ -47,19 +47,16 @@ contract DataCollector {
         collecting = false;
     }
 
-    function broadcast(string[] calldata data) external onlyOwner isNotCollecting {
-        require(data.length == bidprice.length, "Broadcast length must match collected data");
-        delete resolution;
-        for (uint i = 0; i < data.length; i++) {
-            resolution.push(data[i]);
-        }
+    function broadcast(bool[] calldata _resolution) external onlyOwner isNotCollecting {
+        require(_resolution.length == bidprice.length, "Broadcast length must match collected data");
+        resolution = _resolution;
     }
 
     function getCollectedData() external view onlyOwner returns (uint32[] memory, uint32[] memory) {
         return (bidprice, bidquantity);
     }
 
-    function getBroadcastData() external view returns (string[] memory) {
+    function getBroadcastData() external view returns (bool[] memory) {
         return resolution;
     }
 }
