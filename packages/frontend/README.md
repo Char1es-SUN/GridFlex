@@ -154,4 +154,4 @@ packages/frontend/
 
 ## License
 
-MIT License - see LICENSE file for details.
+MIT License
