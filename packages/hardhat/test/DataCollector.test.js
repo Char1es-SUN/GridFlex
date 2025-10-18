@@ -20,14 +20,19 @@ describe("DataCollector Contract", function () {
     expect(await collector.collecting()).to.equal(false);
   });
 
-  it("Participants can submit data during collection", async function () {
+  it("Non-owner cannot start or end collection", async function () {
+    await expect(collector.connect(user1).startCollection()).to.be.revertedWith("Only owner can call");
+    await collector.connect(owner).startCollection();
+    await expect(collector.connect(user1).endCollection()).to.be.revertedWith("Only owner can call");
+    await collector.connect(owner).endCollection();
+  });
+
+  it("Participants can submit valid data during collection", async function () {
     await collector.connect(owner).startCollection();
 
-    // Users submit numeric data
     await collector.connect(user1).submitData(100, 5);
     await collector.connect(user2).submitData(200, 10);
 
-    // Check collected data
     const [prices, quantities] = await collector.getCollectedData();
     expect(prices).to.deep.equal([100, 200]);
     expect(quantities).to.deep.equal([5, 10]);
@@ -35,48 +40,53 @@ describe("DataCollector Contract", function () {
     await collector.connect(owner).endCollection();
   });
 
-  it("Broadcast works only after collection ends and lengths must match", async function () {
+  it("submitData fails when values exceed 2**23", async function () {
     await collector.connect(owner).startCollection();
 
-    await collector.connect(user1).submitData(111, 1);
-    await collector.connect(user2).submitData(222, 2);
-
-    // Cannot broadcast during collection
+    // price 超过限制
     await expect(
-      collector.connect(owner).broadcast(["R1", "R2"])
+      collector.connect(user1).submitData(2 ** 23, 1)
+    ).to.be.revertedWith("price exceeds uint23");
+
+    // quantity 超过限制
+    await expect(
+      collector.connect(user1).submitData(1, 2 ** 23)
+    ).to.be.revertedWith("quantity exceeds uint23");
+
+    await collector.connect(owner).endCollection();
+  });
+
+  it("Broadcast works only after collection ends and length must match", async function () {
+    await collector.connect(owner).startCollection();
+
+    await collector.connect(user1).submitData(10, 1);
+    await collector.connect(user2).submitData(20, 2);
+
+    // broadcast during collection should fail
+    await expect(
+      collector.connect(owner).broadcast([true, false])
     ).to.be.revertedWith("Cannot perform this action while collecting");
 
     await collector.connect(owner).endCollection();
 
-    // Broadcasting with correct length
-    await collector.connect(owner).broadcast(["R1", "R2"]);
+    // broadcast with correct length
+    await collector.connect(owner).broadcast([true, false]);
     const broadcasted = await collector.getBroadcastData();
-    expect(broadcasted).to.deep.equal(["R1", "R2"]);
+    expect(broadcasted).to.deep.equal([true, false]);
 
-    // Broadcasting with incorrect length - should fail
+    // broadcast with incorrect length should fail
     await expect(
-      collector.connect(owner).broadcast(["OnlyOne"])
+      collector.connect(owner).broadcast([true])
     ).to.be.revertedWith("Broadcast length must match collected data");
   });
 
-  it("Only owner can start, end collection and broadcast", async function () {
-    // Non-owner tries to start collection
-    await expect(
-      collector.connect(user1).startCollection()
-    ).to.be.revertedWith("Only owner can call");
-
+  it("Only owner can broadcast", async function () {
     await collector.connect(owner).startCollection();
-
-    // Non-owner tries to end collection
-    await expect(
-      collector.connect(user1).endCollection()
-    ).to.be.revertedWith("Only owner can call");
-
+    await collector.connect(user1).submitData(1, 1);
     await collector.connect(owner).endCollection();
 
-    // Non-owner tries to broadcast
     await expect(
-      collector.connect(user1).broadcast([])
+      collector.connect(user1).broadcast([true])
     ).to.be.revertedWith("Only owner can call");
   });
 });
