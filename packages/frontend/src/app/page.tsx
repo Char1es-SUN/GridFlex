@@ -36,7 +36,7 @@ export default function GridFlexibilityMarket() {
         
         // Map known function selectors to their names
         const functionMap: { [key: string]: string } = {
-          '7072216c': 'submitData(uint32,uint32)',
+          'a62953f3': 'submitData(bytes32,bytes,bytes32,bytes)',
           '085a1daa': 'startCollection()',
           '2efa7ebe': 'endCollection()',
           'bf4cbd06': 'getCollectedData()',
@@ -50,11 +50,13 @@ export default function GridFlexibilityMarket() {
         const functionName = functionMap[functionSelector] || `Unknown function (${functionSelector})`;
         
         // Decode parameters if it's a known function
-        if (functionSelector === '7072216c') {
-          // submitData(uint32,uint32) - decode the two uint32 parameters
-          const param1 = parseInt(cleanData.slice(8, 72), 16);
-          const param2 = parseInt(cleanData.slice(72, 136), 16);
-          return `${functionName}\nParameters:\n  price: ${param1}\n  quantity: ${param2}`;
+        if (functionSelector === 'a62953f3') {
+          // submitData(bytes32,bytes,bytes32,bytes) - FHE encrypted parameters
+          const encryptedPrice = cleanData.slice(8, 72);
+          const priceProof = cleanData.slice(72, 136);
+          const encryptedQuantity = cleanData.slice(136, 200);
+          const quantityProof = cleanData.slice(200, 264);
+          return `${functionName}\nParameters:\n  encryptedPrice: ${encryptedPrice}\n  priceProof: ${priceProof}\n  encryptedQuantity: ${encryptedQuantity}\n  quantityProof: ${quantityProof}`;
         } else if (functionSelector === '085a1daa') {
           // startCollection() - no parameters
           return `${functionName}\nParameters: none`;
