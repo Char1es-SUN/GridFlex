@@ -12,6 +12,7 @@ import {
   AuctionResolved,
   AuctionReset
 } from '../types/grid-flexibility';
+import { defaultAuctionService } from './auction-service';
 
 // ========== Backend Service Interface ==========
 
@@ -180,49 +181,112 @@ export class MockGridFlexibilityService implements GridFlexibilityService {
   }
 
   async triggerAuction(auctionId: string, bidId: string): Promise<ApiResponse<AuctionResult>> {
-    // Mock implementation - would contain actual auction logic
-    const acceptedPowerMW = 50;
-    const pricePerMW = 40;
-    const result: AuctionResult = {
-      auctionId,
-      bidId,
-      acceptedPowerMW,
-      remainingPowerMW: 50,
-      remainingCostPerMW: 50,
-      participantPayoutEUR: acceptedPowerMW * pricePerMW, // Calculate based on price per MW
-      bidStatus: 'accepted',
-      reason: 'Bid price per MW lower than redispatch cost'
-    };
+    try {
+      // Get auction and redispatch event data
+      const auction = await this.getAuction(auctionId);
+      if (!auction.success || !auction.data) {
+        throw new Error('Auction not found');
+      }
 
-    const event = createEvent<AuctionResolved>('auction.resolved', {
-      result,
-      auction: {
-        id: auctionId,
-        redispatchEventId: 'redispatch-1',
-        timestamp: new Date().toISOString(),
-        powerMW: 100,
-        costPerMW: 50,
-        status: 'completed'
-      },
-      bid: {
-        id: bidId,
+      // Get all submitted bids for this auction
+      const allBids = this.getSubmittedBids(auctionId);
+      
+      // Get redispatch event
+      const redispatchEventResponse = await this.getRedispatchEvent(auction.data.redispatchEventId);
+      if (!redispatchEventResponse.success || !redispatchEventResponse.data) {
+        throw new Error('Redispatch event not found');
+      }
+      const redispatchEvent = redispatchEventResponse.data;
+      
+      // Use auction algorithm to process bids
+      const result = await defaultAuctionService.processAuction(
+        auction.data,
+        redispatchEvent,
+        allBids
+      );
+
+      const event = createEvent<AuctionResolved>('auction.resolved', {
+        result,
+        auction: auction.data,
+        bid: allBids.find(b => b.id === bidId) || allBids[0] || {
+          id: bidId,
+          auctionId,
+          participantId: 'participant-1',
+          powerMW: 0,
+          pricePerMW: 0,
+          timestamp: new Date().toISOString(),
+          status: 'submitted'
+        }
+      });
+
+      await this.publishEvent(event);
+      
+      return {
+        success: true,
+        data: result,
+        timestamp: new Date().toISOString()
+      };
+    } catch (error) {
+      console.error('Auction processing failed:', error);
+      return {
+        success: false,
+        error: {
+          code: 'AUCTION_PROCESSING_FAILED',
+          message: error instanceof Error ? error.message : 'Unknown error'
+        },
+        timestamp: new Date().toISOString()
+      };
+    }
+  }
+
+  // ========== Helper Methods ==========
+
+  /**
+   * Get all submitted bids for an auction
+   */
+  private getSubmittedBids(auctionId: string): Bid[] {
+    // In a real implementation, this would query a database
+    // For now, return mock bids based on the participants
+    return [
+      {
+        id: 'bid-1',
         auctionId,
         participantId: 'participant-1',
         powerMW: 50,
-        pricePerMW: 40,
+        pricePerMW: 10,
         timestamp: new Date().toISOString(),
-        status: 'accepted'
+        status: 'submitted'
+      },
+      {
+        id: 'bid-2',
+        auctionId,
+        participantId: 'participant-2',
+        powerMW: 30,
+        pricePerMW: 20,
+        timestamp: new Date().toISOString(),
+        status: 'submitted'
+      },
+      {
+        id: 'bid-3',
+        auctionId,
+        participantId: 'participant-3',
+        powerMW: 40,
+        pricePerMW: 30,
+        timestamp: new Date().toISOString(),
+        status: 'submitted'
+      },
+      {
+        id: 'bid-4',
+        auctionId,
+        participantId: 'participant-4',
+        powerMW: 20,
+        pricePerMW: 80,
+        timestamp: new Date().toISOString(),
+        status: 'submitted'
       }
-    });
-
-    await this.publishEvent(event);
-    
-    return {
-      success: true,
-      data: result,
-      timestamp: new Date().toISOString()
-    };
+    ];
   }
+
 
   async resetAuction(): Promise<ApiResponse<void>> {
     const event = createEvent<AuctionReset>('auction.reset', {

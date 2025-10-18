@@ -35,6 +35,17 @@ export interface Participant {
   pricePerMW: number;
 }
 
+export interface ParticipantResolution {
+  participantId: string;
+  participantName: string;
+  bidPowerMW: number;
+  bidPricePerMW: number;
+  status: 'accepted' | 'rejected';
+  acceptedPowerMW: number;
+  payoutEUR: number;
+  reason?: string;
+}
+
 export interface AuctionResult {
   auctionId: string;
   bidId: string;
@@ -44,6 +55,7 @@ export interface AuctionResult {
   participantPayoutEUR: number;
   bidStatus: 'accepted' | 'rejected';
   reason?: string;
+  participantResolutions: ParticipantResolution[];
 }
 
 export interface BlockchainTransaction {

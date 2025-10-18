@@ -97,37 +97,49 @@ export default function GridFlexibilityMarket() {
               {state.auctionResult && (
                 <div className="p-4 bg-green-50 rounded-lg">
                   <h3 className="font-medium text-green-800 mb-2">Auction Resolved</h3>
-                  <div className="space-y-4 text-black">
-                    {/* Remaining Redispatch Event */}
-                    <div className="p-3 bg-white rounded border-l-2 border-blue-400">
-                      <h4 className="font-medium text-blue-700 mb-2">Remaining Redispatch Event</h4>
-                      <div className="space-y-1">
-                        <div className="flex justify-between">
-                          <span className="text-sm font-medium text-gray-600">Time:</span>
-                          <span className="text-sm text-gray-800">{new Date(state.redispatchEvent.timestamp).toLocaleTimeString()}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-sm font-medium text-gray-600">Remaining Power:</span>
-                          <span className="text-sm text-gray-800">{state.auctionResult.remainingPowerMW} MW</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-sm font-medium text-gray-600">Remaining Cost per MW:</span>
-                          <span className="text-sm text-gray-800">€{state.auctionResult.remainingCostPerMW.toLocaleString()}/MW</span>
+                  
+                  {/* Combined Auction Results */}
+                  <div className="p-4 bg-white rounded-lg border-l-4 border-green-400">
+                    <h4 className="font-medium text-green-700 mb-4">Auction Results</h4>
+                    <div className="space-y-6">
+                      {/* Remaining Redispatch Event */}
+                      <div className="space-y-3">
+                        <h5 className="font-medium text-gray-700 text-sm">Remaining Redispatch Event</h5>
+                        <div className="space-y-2">
+                          <div className="flex justify-between">
+                            <span className="text-sm font-medium text-gray-600">Time:</span>
+                            <span className="text-sm text-gray-800">{new Date(state.redispatchEvent.timestamp).toLocaleTimeString()}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-sm font-medium text-gray-600">Remaining Power:</span>
+                            <span className="text-sm text-gray-800">{state.auctionResult.remainingPowerMW} MW</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-sm font-medium text-gray-600">Remaining Cost per MW:</span>
+                            <span className="text-sm text-gray-800">€{state.auctionResult.remainingCostPerMW.toLocaleString()}/MW</span>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                    
-                    {/* Participant Payout */}
-                    <div className="p-3 bg-green-100 rounded">
-                      <h4 className="font-medium text-green-700 mb-2">Participant Payout</h4>
-                      <div className="space-y-1">
-                        <p><span className="font-medium">Accepted Power:</span> {state.auctionResult.acceptedPowerMW} MW</p>
-                        <p><span className="font-medium">Payout Amount:</span> €{state.auctionResult.participantPayoutEUR.toLocaleString()}</p>
+                      
+                      {/* Participant Payout */}
+                      <div className="space-y-3">
+                        <h5 className="font-medium text-gray-700 text-sm">Participant Payout</h5>
+                        <div className="space-y-2">
+                          <div className="flex justify-between">
+                            <span className="text-sm font-medium text-gray-600">Accepted Power:</span>
+                            <span className="text-sm text-gray-800">{state.auctionResult.acceptedPowerMW} MW</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-sm font-medium text-gray-600">Payout Amount:</span>
+                            <span className="text-sm text-gray-800">€{state.auctionResult.participantPayoutEUR.toLocaleString()}</span>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </div>
                 </div>
               )}
+
             </div>
 
             {/* Participants Section - Left Lower Half */}
@@ -161,37 +173,91 @@ export default function GridFlexibilityMarket() {
               <div className="mb-6">
                 <h3 className="font-medium text-gray-700 mb-3">Place Bids for All Participants</h3>
                 <div className="space-y-4">
-                  {state.participants.map((participant) => (
-                    <div key={participant.id} className="p-4 bg-gray-50 rounded-lg border">
-                      <h4 className="font-medium text-gray-800 mb-3">{participant.name}</h4>
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
-                          <label className="block text-sm font-medium text-gray-600 mb-1">
-                            Bid Power (MW)
-                          </label>
-                          <input
-                            type="number"
-                            value={participant.powerMW}
-                            onChange={(e) => controller.updateParticipant(participant.id, Number(e.target.value), participant.pricePerMW)}
-                            className="w-full text-black px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-                            placeholder="Enter power in MW"
-                          />
+                  {state.participants.map((participant) => {
+                    // Find resolution for this participant
+                    const resolution = state.auctionResult?.participantResolutions?.find(
+                      r => r.participantId === participant.id
+                    );
+                    
+                    return (
+                      <div key={participant.id} className="p-4 bg-gray-50 rounded-lg border">
+                        <h4 className="font-medium text-gray-800 mb-3">{participant.name}</h4>
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <label className="block text-sm font-medium text-gray-600 mb-1">
+                              Bid Power (MW)
+                            </label>
+                            <input
+                              type="number"
+                              value={participant.powerMW}
+                              onChange={(e) => controller.updateParticipant(participant.id, Number(e.target.value), participant.pricePerMW)}
+                              className="w-full text-black px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                              placeholder="Enter power in MW"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-600 mb-1">
+                              Bid Price (€/MW)
+                            </label>
+                            <input
+                              type="number"
+                              value={participant.pricePerMW}
+                              onChange={(e) => controller.updateParticipant(participant.id, participant.powerMW, Number(e.target.value))}
+                              className="w-full text-black px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                              placeholder="Enter price per MW in €"
+                            />
+                          </div>
                         </div>
-                        <div>
-                          <label className="block text-sm font-medium text-gray-600 mb-1">
-                            Bid Price (€/MW)
-                          </label>
-                          <input
-                            type="number"
-                            value={participant.pricePerMW}
-                            onChange={(e) => controller.updateParticipant(participant.id, participant.powerMW, Number(e.target.value))}
-                            className="w-full text-black px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-                            placeholder="Enter price per MW in €"
-                          />
-                        </div>
+                        
+                        {/* Participant Resolution */}
+                        {resolution && (
+                          <div className={`mt-4 p-3 rounded-lg border-l-4 ${
+                            resolution.status === 'accepted' 
+                              ? 'bg-green-50 border-green-400' 
+                              : 'bg-red-50 border-red-400'
+                          }`}>
+                            <div className="flex justify-between items-start mb-2">
+                              <h5 className="font-medium text-gray-800">Bid Resolution</h5>
+                              <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                                resolution.status === 'accepted'
+                                  ? 'bg-green-100 text-green-800'
+                                  : 'bg-red-100 text-red-800'
+                              }`}>
+                                {resolution.status === 'accepted' ? '✅ Accepted' : '❌ Rejected'}
+                              </span>
+                            </div>
+                            
+                            <div className="grid grid-cols-2 gap-4 text-sm">
+                              <div>
+                                <span className="font-medium text-gray-600">Bid Power:</span>
+                                <span className="ml-1 text-gray-800">{resolution.bidPowerMW} MW</span>
+                              </div>
+                              <div>
+                                <span className="font-medium text-gray-600">Bid Price:</span>
+                                <span className="ml-1 text-gray-800">€{resolution.bidPricePerMW}/MW</span>
+                              </div>
+                              {resolution.status === 'accepted' && (
+                                <>
+                                  <div>
+                                    <span className="font-medium text-gray-600">Accepted Power:</span>
+                                    <span className="ml-1 text-gray-800">{resolution.acceptedPowerMW} MW</span>
+                                  </div>
+                                  <div>
+                                    <span className="font-medium text-gray-600">Payout:</span>
+                                    <span className="ml-1 text-gray-800">€{resolution.payoutEUR.toLocaleString()}</span>
+                                  </div>
+                                </>
+                              )}
+                            </div>
+                            
+                            <div className="mt-2 text-xs text-gray-600">
+                              <span className="font-medium">Reason:</span> {resolution.reason}
+                            </div>
+                          </div>
+                        )}
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                   
                   <button
                     onClick={() => controller.broadcastAllBids()}
