@@ -35,7 +35,13 @@ npm run dev
 
 ## Grid Flexibility Market Demo
 
-The frontend demo simulates a local grid flexibility market with:
+The demo showcases the possibility of a private and tamper-proof local grid flexibility market with the ZAMA FHE framework.
+
+### Smart-contract based encryption
+- **Privacy of auction bids**: The ZAMA encryption workflow keeps auction bids private from the public and from the other auction participants.
+- **Delegated decryption**: The ZAMA delegated decryption mechanism allows the grid operator to perform the auction in a trusted environment.
+- **Tamper-proof**: Onchain encrypted bids serve as a predicate for verifiable auction execution, avoiding tampering by the auctioneer.
+
 
 ### Grid Operator Interface
 - **Redispatch Event Display**: Shows upcoming events with time, power, and cost
