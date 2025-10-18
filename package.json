@@ -11,20 +11,20 @@
     "npm": ">=7.0.0"
   },
   "scripts": {
-    "chain": "npm run chain --workspace=packages/hardhat",
-    "deploy": "npm run deploy:localhost --workspace=packages/hardhat",
+    "chain": "npm run chain --workspace=packages/fhevm-hardhat-template",
+    "deploy": "npm run deploy:localhost --workspace=packages/fhevm-hardhat-template",
     "dev": "npm run dev --workspace=packages/frontend",
     "build": "npm run build --workspace=packages/frontend",
     "start": "npm run start --workspace=packages/frontend",
-    "hardhat:compile": "npm run compile --workspace=packages/hardhat",
-    "hardhat:test": "npm run test --workspace=packages/hardhat",
-    "hardhat:deploy:localhost": "npm run deploy:localhost --workspace=packages/hardhat",
-    "hardhat:deploy:sepolia": "npm run deploy:sepolia --workspace=packages/hardhat",
-    "hardhat:chain": "npm run chain --workspace=packages/hardhat",
-    "install:all": "npm install && npm install --workspace=packages/hardhat && npm install --workspace=packages/frontend",
-    "clean": "npm run clean --workspace=packages/hardhat && npm run clean --workspace=packages/frontend",
-    "lint": "npm run lint --workspace=packages/hardhat && npm run lint --workspace=packages/frontend",
-    "typecheck": "npm run typecheck --workspace=packages/hardhat && npm run typecheck --workspace=packages/frontend"
+    "hardhat:compile": "npm run compile --workspace=packages/fhevm-hardhat-template",
+    "hardhat:test": "npm run test --workspace=packages/fhevm-hardhat-template",
+    "hardhat:deploy:localhost": "npm run deploy:localhost --workspace=packages/fhevm-hardhat-template",
+    "hardhat:deploy:sepolia": "npm run deploy:sepolia --workspace=packages/fhevm-hardhat-template",
+    "hardhat:chain": "npm run chain --workspace=packages/fhevm-hardhat-template",
+    "install:all": "npm install && npm install --workspace=packages/fhevm-hardhat-template && npm install --workspace=packages/frontend",
+    "clean": "npm run clean --workspace=packages/fhevm-hardhat-template && npm run clean --workspace=packages/frontend",
+    "lint": "npm run lint --workspace=packages/fhevm-hardhat-template && npm run lint --workspace=packages/frontend",
+    "typecheck": "npm run typecheck --workspace=packages/fhevm-hardhat-template && npm run typecheck --workspace=packages/frontend"
   },
   "keywords": [
     "grid-flexibility",
