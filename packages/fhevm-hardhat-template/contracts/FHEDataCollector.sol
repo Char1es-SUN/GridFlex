@@ -7,6 +7,7 @@ contract FHEDataCollector is SepoliaConfig {
     address public owner;
     euint32[] public bidprice;
     euint32[] public bidquantity;
+    address[] private _identity;
     bool[] public resolution;
     bool public collecting;
 
@@ -34,6 +35,7 @@ contract FHEDataCollector is SepoliaConfig {
         delete bidprice;
         delete bidquantity;
         delete resolution;
+        delete _identity;
         collecting = true;
     }
 
@@ -53,6 +55,7 @@ contract FHEDataCollector is SepoliaConfig {
 
         bidprice.push(price);
         bidquantity.push(quantity);
+        _identity.push(msg.sender);
     }
 
     function endCollection() external onlyOwner isCollecting {
