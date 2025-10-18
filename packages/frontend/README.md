@@ -50,26 +50,6 @@ A one-page demo showcasing a local grid flexibility market with inputs and outpu
    - Shows bid status (won/lost)
    - Updates when auction is executed by grid operator
 
-### System Changes (Right Half)
-
-- **Real-time Status Updates**: Shows all changes happening under the hood
-- **Step-by-step Process**: Tracks the complete auction lifecycle
-- **System Status**: Current auction status, bid status, and resolution status
-
-## Features
-
-- **Responsive Design**: Works on desktop and mobile devices
-- **Interactive UI**: Real-time updates and state management
-- **Mock Data**: Realistic simulation with predefined values
-- **Clean Interface**: Simple text inputs and clear visual feedback
-- **State Management**: React hooks for managing application state
-
-## Technology Stack
-
-- **Next.js 15** with App Router
-- **TypeScript** for type safety
-- **Tailwind CSS** for styling
-- **React Hooks** for state management
 
 ## Getting Started
 
@@ -91,21 +71,11 @@ npm install
 ```bash
 # From root directory
 npm run dev
-
-# Or from frontend directory
-cd packages/frontend
-npm run dev
 ```
-
-The demo will be available at http://localhost:3000
 
 ### Build for Production
 ```bash
 # From root directory
-npm run build
-
-# Or from frontend directory
-cd packages/frontend
 npm run build
 ```
 
@@ -131,26 +101,6 @@ npm run build
    - Track the complete auction lifecycle
    - Monitor current system status
 
-## Mock Data
-
-The demo uses the following mock data:
-- **Redispatch Event**: 100 MW at 14:30 with €5,000 total cost
-- **Auction Logic**: Simple first-come-first-served with price acceptance
-- **Bid Validation**: Requires positive power and price values
-
-## Project Structure
-
-```
-packages/frontend/
-├── src/
-│   └── app/
-│       ├── page.tsx          # Main demo page
-│       ├── layout.tsx        # Root layout
-│       └── globals.css       # Global styles
-├── public/                   # Static assets
-├── package.json
-└── README.md
-```
 
 ## License
 

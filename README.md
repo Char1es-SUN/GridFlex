@@ -98,21 +98,7 @@ cd packages/frontend
 npm run lint
 ```
 
-## Documentation
 
-- [Frontend Demo Guide](./packages/frontend/README.md)
-- [Smart Contracts Documentation](./packages/hardhat/README.md)
-
-## 🔧 Configuration
-
-### Environment Variables
-Create `.env` files in the respective package directories:
-
-**packages/hardhat/.env:**
-```env
-SEPOLIA_RPC_URL=your_sepolia_rpc_url
-ETHERSCAN_API_KEY=your_etherscan_api_key
-```
 
 **packages/frontend/.env.local:**
 ```env
