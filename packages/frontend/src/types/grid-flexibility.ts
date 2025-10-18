@@ -4,7 +4,7 @@ export interface RedispatchEvent {
   id: string;
   timestamp: string;
   powerMW: number;
-  costEUR: number;
+  costPerMW: number;
   status: 'pending' | 'active' | 'completed';
 }
 
@@ -13,7 +13,7 @@ export interface Auction {
   redispatchEventId: string;
   timestamp: string;
   powerMW: number;
-  costEUR: number;
+  costPerMW: number;
   status: 'active' | 'completed' | 'cancelled';
   participantId?: string;
 }
@@ -23,9 +23,16 @@ export interface Bid {
   auctionId: string;
   participantId: string;
   powerMW: number;
-  priceEUR: number;
+  pricePerMW: number;
   timestamp: string;
   status: 'submitted' | 'accepted' | 'rejected';
+}
+
+export interface Participant {
+  id: string;
+  name: string;
+  powerMW: number;
+  pricePerMW: number;
 }
 
 export interface AuctionResult {
@@ -33,7 +40,7 @@ export interface AuctionResult {
   bidId: string;
   acceptedPowerMW: number;
   remainingPowerMW: number;
-  remainingCostEUR: number;
+  remainingCostPerMW: number;
   participantPayoutEUR: number;
   bidStatus: 'accepted' | 'rejected';
   reason?: string;

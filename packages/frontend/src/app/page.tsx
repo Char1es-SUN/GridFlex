@@ -14,12 +14,12 @@ export default function GridFlexibilityMarket() {
     id: 'redispatch-1',
     timestamp: '2024-01-15T14:30:00.000Z', // Fixed timestamp
     powerMW: 100,
-    costEUR: 5000,
+    costPerMW: 50,
     status: 'pending'
   });
 
   // Use the custom hook for state management
-  const { state, controller, isAuctionActive, canPlaceBid, canTriggerAuction, hasEvents } = useGridFlexibility(service, redispatchEvent);
+  const { state, controller, isAuctionActive, canTriggerAuction, hasEvents, canBroadcastBids } = useGridFlexibility(service, redispatchEvent);
 
   return (
     <div className="min-h-screen bg-gray-50 p-6">
@@ -60,10 +60,10 @@ export default function GridFlexibilityMarket() {
                     <span className="text-sm font-medium text-gray-600">Total Power:</span>
                     <span className="text-sm text-gray-800">{state.redispatchEvent.powerMW} MW</span>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-sm font-medium text-gray-600">Total Cost:</span>
-                    <span className="text-sm text-gray-800">€{state.redispatchEvent.costEUR.toLocaleString()}</span>
-                  </div>
+                      <div className="flex justify-between">
+                        <span className="text-sm font-medium text-gray-600">Cost per MW:</span>
+                        <span className="text-sm text-gray-800">€{state.redispatchEvent.costPerMW.toLocaleString()}/MW</span>
+                      </div>
                 </div>
               </div>
 
@@ -111,8 +111,8 @@ export default function GridFlexibilityMarket() {
                           <span className="text-sm text-gray-800">{state.auctionResult.remainingPowerMW} MW</span>
                         </div>
                         <div className="flex justify-between">
-                          <span className="text-sm font-medium text-gray-600">Remaining Cost:</span>
-                          <span className="text-sm text-gray-800">€{state.auctionResult.remainingCostEUR.toLocaleString()}</span>
+                          <span className="text-sm font-medium text-gray-600">Remaining Cost per MW:</span>
+                          <span className="text-sm text-gray-800">€{state.auctionResult.remainingCostPerMW.toLocaleString()}/MW</span>
                         </div>
                       </div>
                     </div>
@@ -130,9 +130,9 @@ export default function GridFlexibilityMarket() {
               )}
             </div>
 
-            {/* Participant Section - Left Lower Half */}
+            {/* Participants Section - Left Lower Half */}
             <div className="bg-white rounded-lg shadow-lg p-6 border-l-4 border-green-500">
-              <h2 className="text-xl font-semibold mb-4 text-green-700">Grid Participant</h2>
+              <h2 className="text-xl font-semibold mb-4 text-green-700">Grid Participants</h2>
               
               {/* Current Auction */}
               {isAuctionActive && (
@@ -150,53 +150,59 @@ export default function GridFlexibilityMarket() {
                         <span className="text-sm text-gray-800">{state.redispatchEvent.powerMW} MW</span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-sm font-medium text-gray-600">Total Cost:</span>
-                        <span className="text-sm text-gray-800">€{state.redispatchEvent.costEUR.toLocaleString()}</span>
+                        <span className="text-sm font-medium text-gray-600">Cost per MW:</span>
+                        <span className="text-sm text-gray-800">€{state.redispatchEvent.costPerMW.toLocaleString()}/MW</span>
                       </div>
                     </div>
                   </div>
               )}
 
-              {/* Bid Input */}
+              {/* Participants Bid Input */}
               <div className="mb-6">
-                <h3 className="font-medium text-gray-700 mb-3">Place Your Bid</h3>
+                <h3 className="font-medium text-gray-700 mb-3">Place Bids for All Participants</h3>
                 <div className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-600  mb-1">
-                        Bid Power (MW)
-                      </label>
-                      <input
-                        type="number"
-                        value={state.bid.powerMW}
-                        onChange={(e) => controller.updateBidPower(Number(e.target.value))}
-                        className="w-full text-black px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-                        placeholder="Enter power in MW"
-                      />
+                  {state.participants.map((participant) => (
+                    <div key={participant.id} className="p-4 bg-gray-50 rounded-lg border">
+                      <h4 className="font-medium text-gray-800 mb-3">{participant.name}</h4>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-600 mb-1">
+                            Bid Power (MW)
+                          </label>
+                          <input
+                            type="number"
+                            value={participant.powerMW}
+                            onChange={(e) => controller.updateParticipant(participant.id, Number(e.target.value), participant.pricePerMW)}
+                            className="w-full text-black px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                            placeholder="Enter power in MW"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-600 mb-1">
+                            Bid Price (€/MW)
+                          </label>
+                          <input
+                            type="number"
+                            value={participant.pricePerMW}
+                            onChange={(e) => controller.updateParticipant(participant.id, participant.powerMW, Number(e.target.value))}
+                            className="w-full text-black px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                            placeholder="Enter price per MW in €"
+                          />
+                        </div>
+                      </div>
                     </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-600 mb-1">
-                        Bid Price (€)
-                      </label>
-                      <input
-                        type="number"
-                        value={state.bid.priceEUR}
-                        onChange={(e) => controller.updateBidPrice(Number(e.target.value))}
-                        className="w-full text-black px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-                        placeholder="Enter total price in €"
-                      />
-                    </div>
-                  </div>
+                  ))}
+                  
                   <button
-                    onClick={() => controller.placeBid()}
-                    disabled={!canPlaceBid}
-                    className={`w-full font-medium py-2 px-4 rounded-lg transition-colors ${
-                      canPlaceBid
+                    onClick={() => controller.broadcastAllBids()}
+                    disabled={!canBroadcastBids}
+                    className={`w-full font-medium py-3 px-4 rounded-lg transition-colors ${
+                      canBroadcastBids
                         ? 'bg-green-600 hover:bg-green-700 text-white'
                         : 'bg-gray-300 text-gray-500 cursor-not-allowed'
                     }`}
                   >
-                    Broadcast Bid
+                    Broadcast All Bids
                   </button>
                 </div>
               </div>

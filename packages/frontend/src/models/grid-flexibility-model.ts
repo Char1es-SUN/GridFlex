@@ -1,4 +1,4 @@
-import { RedispatchEvent, Auction, Bid, AuctionResult, GridFlexibilityEvent, BlockchainTransaction } from '../types/grid-flexibility';
+import { RedispatchEvent, Auction, Bid, AuctionResult, GridFlexibilityEvent, BlockchainTransaction, Participant } from '../types/grid-flexibility';
 
 // ========== Model State Interface ==========
 
@@ -11,6 +11,7 @@ export interface GridFlexibilityState {
   notification: string;
   events: GridFlexibilityEvent[];
   transactions: BlockchainTransaction[];
+  participants: Participant[];
 }
 
 // ========== Model Actions ==========
@@ -24,6 +25,7 @@ export type GridFlexibilityAction =
   | { type: 'ADD_EVENT'; payload: GridFlexibilityEvent }
   | { type: 'ADD_TRANSACTION'; payload: BlockchainTransaction }
   | { type: 'UPDATE_TRANSACTION'; payload: BlockchainTransaction }
+  | { type: 'UPDATE_PARTICIPANT'; payload: { id: string; powerMW: number; pricePerMW: number } }
   | { type: 'RESET_AUCTION' };
 
 // ========== Model Class ==========
@@ -40,13 +42,19 @@ export class GridFlexibilityModel {
         auctionId: '',
         participantId: 'participant-1',
         powerMW: 0,
-        priceEUR: 0
+        pricePerMW: 0
       },
       auctionResult: null,
       bidPlaced: false,
       notification: '',
       events: [],
-      transactions: []
+      transactions: [],
+      participants: [
+        { id: 'participant-1', name: 'Participant 1', powerMW: 50, pricePerMW: 10 },
+        { id: 'participant-2', name: 'Participant 2', powerMW: 30, pricePerMW: 20 },
+        { id: 'participant-3', name: 'Participant 3', powerMW: 40, pricePerMW: 30 },
+        { id: 'participant-4', name: 'Participant 4', powerMW: 20, pricePerMW: 80 }
+      ]
     };
   }
 
@@ -120,6 +128,17 @@ export class GridFlexibilityModel {
           )
         };
         break;
+      case 'UPDATE_PARTICIPANT':
+        console.log('Updating participant in model:', action.payload.id);
+        this.state = { 
+          ...this.state, 
+          participants:         this.state.participants.map(p => 
+          p.id === action.payload.id 
+            ? { ...p, powerMW: action.payload.powerMW, pricePerMW: action.payload.pricePerMW }
+            : p
+        )
+        };
+        break;
       case 'RESET_AUCTION':
         this.state = {
           ...this.state,
@@ -128,12 +147,18 @@ export class GridFlexibilityModel {
             auctionId: '',
             participantId: 'participant-1',
             powerMW: 0,
-            priceEUR: 0
+            pricePerMW: 0
           },
           auctionResult: null,
           bidPlaced: false,
           notification: '',
-          transactions: []
+          transactions: [],
+          participants: [
+            { id: 'participant-1', name: 'Participant 1', powerMW: 50, pricePerMW: 10 },
+            { id: 'participant-2', name: 'Participant 2', powerMW: 30, pricePerMW: 20 },
+            { id: 'participant-3', name: 'Participant 3', powerMW: 40, pricePerMW: 30 },
+            { id: 'participant-4', name: 'Participant 4', powerMW: 20, pricePerMW: 80 }
+          ]
         };
         break;
       default:
@@ -150,7 +175,7 @@ export class GridFlexibilityModel {
   }
 
   get canPlaceBid(): boolean {
-    return this.isAuctionActive && this.state.bid.powerMW > 0 && this.state.bid.priceEUR > 0;
+    return this.isAuctionActive && this.state.bid.powerMW > 0 && this.state.bid.pricePerMW > 0;
   }
 
   get canTriggerAuction(): boolean {
@@ -159,5 +184,9 @@ export class GridFlexibilityModel {
 
   get hasEvents(): boolean {
     return this.state.events.length > 0;
+  }
+
+  get canBroadcastBids(): boolean {
+    return this.isAuctionActive && this.state.participants.some(p => p.powerMW > 0 && p.pricePerMW > 0);
   }
 }

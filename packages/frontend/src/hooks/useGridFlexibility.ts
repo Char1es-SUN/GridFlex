@@ -42,6 +42,7 @@ export function useGridFlexibility(
     isAuctionActive: model.isAuctionActive,
     canPlaceBid: model.canPlaceBid,
     canTriggerAuction: model.canTriggerAuction,
-    hasEvents: model.hasEvents
+    hasEvents: model.hasEvents,
+    canBroadcastBids: model.canBroadcastBids
   };
 }

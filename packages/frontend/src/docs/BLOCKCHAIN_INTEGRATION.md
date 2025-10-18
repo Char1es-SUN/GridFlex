@@ -222,7 +222,7 @@ interface TransactionConstructionContext {
       "id": "auction-1",
       "redispatchEventId": "redispatch-1",
       "powerMW": 100,
-      "costEUR": 5000
+      "costPerMW": 50
     }
   },
   "timestamp": "2024-01-15T14:30:00.000Z",
@@ -239,7 +239,7 @@ interface TransactionConstructionContext {
       "auctionId": "auction-1",
       "participantId": "participant-1",
       "powerMW": 50,
-      "priceEUR": 2000
+      "pricePerMW": 40
     }
   },
   "timestamp": "2024-01-15T14:35:00.000Z",

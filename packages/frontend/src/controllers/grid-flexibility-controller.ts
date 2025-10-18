@@ -141,7 +141,7 @@ export class GridFlexibilityController {
 
   async placeBid(): Promise<void> {
     const state = this.model.getState();
-    if (!state.auction || state.bid.powerMW <= 0 || state.bid.priceEUR <= 0) return;
+    if (!state.auction || state.bid.powerMW <= 0 || state.bid.pricePerMW <= 0) return;
 
     try {
       const bidData = {
@@ -215,15 +215,60 @@ export class GridFlexibilityController {
     });
   }
 
-  updateBidPrice(priceEUR: number): void {
+  updateBidPrice(pricePerMW: number): void {
     const currentBid = this.model.getState().bid;
     this.model.dispatch({ 
       type: 'SET_BID', 
-      payload: { ...currentBid, priceEUR } 
+      payload: { ...currentBid, pricePerMW } 
     });
   }
 
   clearNotification(): void {
     this.model.dispatch({ type: 'SET_NOTIFICATION', payload: '' });
+  }
+
+  // ========== Participant Management ==========
+
+  updateParticipant(participantId: string, powerMW: number, pricePerMW: number): void {
+    this.model.dispatch({ 
+      type: 'UPDATE_PARTICIPANT', 
+      payload: { id: participantId, powerMW, pricePerMW } 
+    });
+  }
+
+  async broadcastAllBids(): Promise<void> {
+    try {
+      const state = this.model.getState();
+      if (!state.auction) return;
+
+      const validParticipants = state.participants.filter(p => p.powerMW > 0 && p.pricePerMW > 0);
+      
+      if (validParticipants.length === 0) {
+        this.model.dispatch({ type: 'SET_NOTIFICATION', payload: 'No valid bids to broadcast' });
+        return;
+      }
+
+      // Create bids for all participants
+      for (const participant of validParticipants) {
+        const bid = {
+          auctionId: state.auction.id,
+          participantId: participant.id,
+          powerMW: participant.powerMW,
+          pricePerMW: participant.pricePerMW
+        };
+
+        const response = await this.service.submitBid(bid);
+        if (response.success && response.data) {
+          console.log(`Bid submitted for ${participant.name}:`, response.data);
+        }
+      }
+
+      this.model.dispatch({ type: 'SET_BID_PLACED', payload: true });
+      this.model.dispatch({ type: 'SET_NOTIFICATION', payload: `Successfully broadcasted ${validParticipants.length} bids` });
+      
+    } catch (error) {
+      console.error('Broadcast all bids error:', error);
+      this.model.dispatch({ type: 'SET_NOTIFICATION', payload: 'Failed to broadcast bids' });
+    }
   }
 }

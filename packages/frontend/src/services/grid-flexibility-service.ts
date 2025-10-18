@@ -123,7 +123,7 @@ export class MockGridFlexibilityService implements GridFlexibilityService {
         id,
         timestamp: new Date().toISOString(),
         powerMW: 100,
-        costEUR: 5000,
+        costPerMW: 50,
         status: 'pending'
       },
       timestamp: new Date().toISOString()
@@ -138,7 +138,7 @@ export class MockGridFlexibilityService implements GridFlexibilityService {
       redispatchEventId,
       timestamp: new Date().toISOString(),
       powerMW: 100,
-      costEUR: 5000,
+      costPerMW: 50,
       status: 'active'
     };
 
@@ -148,7 +148,7 @@ export class MockGridFlexibilityService implements GridFlexibilityService {
         id: redispatchEventId,
         timestamp: new Date().toISOString(),
         powerMW: 100,
-        costEUR: 5000,
+        costPerMW: 50,
         status: 'active'
       }
     });
@@ -172,7 +172,7 @@ export class MockGridFlexibilityService implements GridFlexibilityService {
         redispatchEventId: 'redispatch-1',
         timestamp: new Date().toISOString(),
         powerMW: 100,
-        costEUR: 5000,
+        costPerMW: 50,
         status: 'active'
       },
       timestamp: new Date().toISOString()
@@ -181,13 +181,15 @@ export class MockGridFlexibilityService implements GridFlexibilityService {
 
   async triggerAuction(auctionId: string, bidId: string): Promise<ApiResponse<AuctionResult>> {
     // Mock implementation - would contain actual auction logic
+    const acceptedPowerMW = 50;
+    const pricePerMW = 40;
     const result: AuctionResult = {
       auctionId,
       bidId,
-      acceptedPowerMW: 50,
+      acceptedPowerMW,
       remainingPowerMW: 50,
-      remainingCostEUR: 2500,
-      participantPayoutEUR: 2000,
+      remainingCostPerMW: 50,
+      participantPayoutEUR: acceptedPowerMW * pricePerMW, // Calculate based on price per MW
       bidStatus: 'accepted',
       reason: 'Bid price per MW lower than redispatch cost'
     };
@@ -199,7 +201,7 @@ export class MockGridFlexibilityService implements GridFlexibilityService {
         redispatchEventId: 'redispatch-1',
         timestamp: new Date().toISOString(),
         powerMW: 100,
-        costEUR: 5000,
+        costPerMW: 50,
         status: 'completed'
       },
       bid: {
@@ -207,7 +209,7 @@ export class MockGridFlexibilityService implements GridFlexibilityService {
         auctionId,
         participantId: 'participant-1',
         powerMW: 50,
-        priceEUR: 2000,
+        pricePerMW: 40,
         timestamp: new Date().toISOString(),
         status: 'accepted'
       }
@@ -250,7 +252,7 @@ export class MockGridFlexibilityService implements GridFlexibilityService {
         redispatchEventId: 'redispatch-1',
         timestamp: new Date().toISOString(),
         powerMW: 100,
-        costEUR: 5000,
+        costPerMW: 50,
         status: 'active'
       }
     });
@@ -273,7 +275,7 @@ export class MockGridFlexibilityService implements GridFlexibilityService {
         auctionId: 'auction-1',
         participantId: 'participant-1',
         powerMW: 50,
-        priceEUR: 2000,
+        pricePerMW: 40,
         timestamp: new Date().toISOString(),
         status: 'submitted'
       },
