@@ -3,8 +3,8 @@ pragma solidity ^0.8.20;
 
 contract DataCollector {
     address public owner;
-    string[] public collectedData;
-    string[] public broadcastData;
+    string[] public bids;
+    string[] public resolution;
     bool public collecting;
 
     constructor() {
@@ -28,13 +28,13 @@ contract DataCollector {
     }
 
     function startCollection() external onlyOwner {
-        delete collectedData;
-        delete broadcastData;
+        delete bids;
+        delete resolution;
         collecting = true;
     }
 
     function submitData(string calldata data) external isCollecting {
-        collectedData.push(data);
+        bids.push(data);
     }
 
     function endCollection() external onlyOwner isCollecting {
@@ -42,18 +42,18 @@ contract DataCollector {
     }
 
     function broadcast(string[] calldata data) external onlyOwner isNotCollecting {
-        require(data.length == collectedData.length, "Broadcast length must match collected data");
-        delete broadcastData;
+        require(data.length == bids.length, "Broadcast length must match collected data");
+        delete resolution;
         for (uint i = 0; i < data.length; i++) {
-            broadcastData.push(data[i]);
+            resolution.push(data[i]);
         }
     }
 
     function getCollectedData() external view onlyOwner returns (string[] memory) {
-        return collectedData;
+        return bids;
     }
 
     function getBroadcastData() external view returns (string[] memory) {
-        return broadcastData;
+        return resolution;
     }
 }
