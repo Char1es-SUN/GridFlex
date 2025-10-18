@@ -1,10 +1,11 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
+import {FHE, euint32, externalEuint32} from "@fhevm/solidity/lib/FHE.sol";
+import {SepoliaConfig} from "@fhevm/solidity/config/ZamaConfig.sol";
 
 contract DataCollector {
     address public owner;
-    uint32[] public bidprice;
-    uint32[] public bidquantity;
+    string[] public bids;
     string[] public resolution;
     bool public collecting;
 
@@ -29,18 +30,13 @@ contract DataCollector {
     }
 
     function startCollection() external onlyOwner {
-        delete bidprice;
-        delete bidquantity;
+        delete bids;
         delete resolution;
         collecting = true;
     }
 
-    function submitData(uint32 price, uint32 quantity) external isCollecting {
-        require(price < 2 ** 23, "price exceeds uint23");
-        require(quantity < 2 ** 23, "quantity exceeds uint23");
-
-        bidprice.push(price);
-        bidquantity.push(quantity);
+    function submitData(string calldata data) external isCollecting {
+        bids.push(data);
     }
 
     function endCollection() external onlyOwner isCollecting {
@@ -48,15 +44,15 @@ contract DataCollector {
     }
 
     function broadcast(string[] calldata data) external onlyOwner isNotCollecting {
-        require(data.length == bidprice.length, "Broadcast length must match collected data");
+        require(data.length == bids.length, "Broadcast length must match collected data");
         delete resolution;
         for (uint i = 0; i < data.length; i++) {
             resolution.push(data[i]);
         }
     }
 
-    function getCollectedData() external view onlyOwner returns (uint32[] memory, uint32[] memory) {
-        return (bidprice, bidquantity);
+    function getCollectedData() external view onlyOwner returns (string[] memory) {
+        return bids;
     }
 
     function getBroadcastData() external view returns (string[] memory) {
