@@ -19,8 +19,7 @@ ethrome2025/
 │       ├── src/
 │       │   └── app/      # Next.js app directory
 │       └── ...
-├── package.json          # Root workspace configuration
-└── start-demo.sh         # Quick start script
+└── package.json          # Root workspace configuration
 ```
 
 ## 🚀 Quick Start
@@ -61,7 +60,6 @@ FHEVM-based smart contracts for grid flexibility market operations.
 
 **Key Features:**
 - FHEVM integration for privacy-preserving computations
-- Grid flexibility market contracts
 - Comprehensive testing suite
 - Deployment scripts for local and testnet
 
@@ -169,7 +167,6 @@ Create `.env` files in the respective package directories:
 **packages/hardhat/.env:**
 ```env
 SEPOLIA_RPC_URL=your_sepolia_rpc_url
-PRIVATE_KEY=your_private_key
 ETHERSCAN_API_KEY=your_etherscan_api_key
 ```
 
@@ -189,7 +186,3 @@ MIT License - see LICENSE file for details.
 3. Make your changes
 4. Run tests and linting
 5. Submit a pull request
-
-## 📞 Support
-
-For questions or support, please open an issue in the repository.
