@@ -3,10 +3,11 @@ pragma solidity ^0.8.20;
 import {FHE, euint32, externalEuint32} from "@fhevm/solidity/lib/FHE.sol";
 import {SepoliaConfig} from "@fhevm/solidity/config/ZamaConfig.sol";
 
-contract DataCollector {
+contract FHEDataCollector is SepoliaConfig {
     address public owner;
-    string[] public bids;
-    string[] public resolution;
+    euint32[] public bidprice;
+    euint32[] public bidquantity;
+    bool[] public resolution;
     bool public collecting;
 
     constructor() {
@@ -30,32 +31,42 @@ contract DataCollector {
     }
 
     function startCollection() external onlyOwner {
-        delete bids;
+        delete bidprice;
+        delete bidquantity;
         delete resolution;
         collecting = true;
     }
 
-    function submitData(string calldata data) external isCollecting {
-        bids.push(data);
+    function submitData(
+        externalEuint32 _price,
+        bytes calldata priceProof,
+        externalEuint32 _quantity,
+        bytes calldata quantityProof
+    ) external isCollecting {
+        euint32 price = FHE.fromExternal(_price, priceProof);
+        euint32 quantity = FHE.fromExternal(_quantity, quantityProof);
+
+        price.allow(msg.sender, owner);
+        quantity.allow(msg.sender, owner);
+
+        bidprice.push(price);
+        bidquantity.push(quantity);
     }
 
     function endCollection() external onlyOwner isCollecting {
         collecting = false;
     }
 
-    function broadcast(string[] calldata data) external onlyOwner isNotCollecting {
-        require(data.length == bids.length, "Broadcast length must match collected data");
-        delete resolution;
-        for (uint i = 0; i < data.length; i++) {
-            resolution.push(data[i]);
-        }
+    function broadcast(bool[] calldata _resolution) external onlyOwner isNotCollecting {
+        require(_resolution.length == bidprice.length, "Broadcast length must match collected data");
+        resolution = _resolution;
     }
 
-    function getCollectedData() external view onlyOwner returns (string[] memory) {
-        return bids;
+    function getCollectedData() external view onlyOwner returns (euint32[] memory, euint32[] memory) {
+        return (bidprice, bidquantity);
     }
 
-    function getBroadcastData() external view returns (string[] memory) {
+    function getBroadcastData() external view returns (bool[] memory) {
         return resolution;
     }
 }
