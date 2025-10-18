@@ -2,7 +2,11 @@
   "name": "smart-contract-demo",
   "version": "1.0.0",
   "scripts": {
-    "test": "hardhat test"
+    "test": "hardhat test",
+    "chain": "hardhat node",
+    "deploy:localhost": "hardhat run scripts/deploy.js --network localhost",
+    "compile": "hardhat compile",
+    "clean": "hardhat clean"
   },
   "devDependencies": {
     "@nomicfoundation/hardhat-toolbox": "^3.0.0",

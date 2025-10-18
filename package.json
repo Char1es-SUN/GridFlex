@@ -11,6 +11,8 @@
     "npm": ">=7.0.0"
   },
   "scripts": {
+    "chain": "npm run chain --workspace=packages/hardhat",
+    "deploy": "npm run deploy:localhost --workspace=packages/hardhat",
     "dev": "npm run dev --workspace=packages/frontend",
     "build": "npm run build --workspace=packages/frontend",
     "start": "npm run start --workspace=packages/frontend",
