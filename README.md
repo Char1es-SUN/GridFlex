@@ -33,21 +33,25 @@ ethrome2025/
 ```bash
 # Install all dependencies
 npm run install:all
-
-# Or install individually
-npm install
-npm install --workspace=packages/hardhat
-npm install --workspace=packages/frontend
 ```
 
 ### Running the Demo
-```bash
-# Start the frontend demo
-npm run dev
-# or
-./start-demo.sh
 
-# The demo will be available at http://localhost:3000
+In separate terminals:
+
+Start local chain
+```bash
+npm run chain
+```
+
+Deploy contracts
+```bash
+npm run deploy
+```
+
+Start the frontend demo
+```bash
+npm run dev
 ```
 
 ## 📦 Packages
