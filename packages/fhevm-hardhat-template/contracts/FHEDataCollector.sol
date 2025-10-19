@@ -185,8 +185,4 @@ contract FHEDataCollector is SepoliaConfig {
     function getSubmissionCount() external view returns (uint) {
         return _identity.length;
     }
-
-    function userSubmissionIndex(address _userAddress) external view returns (uint) {
-        return userSubmissionIndex[_userAddress];
-    }
 }
